@@ -298,7 +298,14 @@ export default function Flashcard() {
       >
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Flashcard SaaS
+            <Button
+              variant="contained"
+              color="primary"
+              href="/"
+              sx={{ borderRadius: 8 }} // Rounded buttons
+            >
+              Flashcard SaaS
+            </Button>
           </Typography>
 
           {isLoaded && isSignedIn ? (

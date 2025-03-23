@@ -18,8 +18,15 @@ export default function SignUpPage() {
         sx={{ borderRadius: 2, boxShadow: "none" }} // Rounded AppBar, No Shadow
       >
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            Flashcard SaaS
+        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              href="/"
+              sx={{ borderRadius: 8 }} // Rounded buttons
+            >
+              Flashcard SaaS
+            </Button>
           </Typography>
           <Button color="inherit" href="/sign-in" sx={{ borderRadius: 8 }}>
             Sign In

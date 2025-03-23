@@ -1,17 +1,20 @@
 // firebase.js
-
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.FIREBASE_API,
-  authDomain: "flashcardsaas-404d7.firebaseapp.com",
-  projectId: "flashcardsaas-404d7",
-  storageBucket: "flashcardsaas-404d7.appspot.com",
-  messagingSenderId: "699525519846",
-  appId: "1:699525519846:web:e6941ac10b20c338a1de27",
-  measurementId: "G-TKK2PDRR3N"
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: "flashmind-ai.firebaseapp.com",
+  projectId: "flashmind-ai",
+  storageBucket: "flashmind-ai.firebasestorage.app",
+  messagingSenderId: "813603668378",
+  appId: "1:813603668378:web:06ced32b30dc5983d53a23",
+  measurementId: "G-8L20QM2RVX"
 };
 
 // Initialize Firebase

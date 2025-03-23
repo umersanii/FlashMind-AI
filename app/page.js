@@ -64,14 +64,16 @@ export default function Generate() {
             justifyContent="center"
             sx={{ mt: 4 }}
           >
-            <Button
-              variant="contained"
-              color="primary"
-              href="/generate"
-              sx={{ borderRadius: 8 }} // Rounded buttons
-            >
-              Create Flashcards
-            </Button>
+            {isLoaded && isSignedIn && (
+              <Button
+                variant="contained"
+                color="primary"
+                href="/generate"
+                sx={{ borderRadius: 8 }} // Rounded buttons
+              >
+                Create Flashcards
+              </Button>
+            )}
             {isLoaded && isSignedIn && (
               <Button
                 variant="contained"
@@ -82,6 +84,17 @@ export default function Generate() {
                 My Flashcards
               </Button>
             )}
+            {!isLoaded ||
+              (!isSignedIn && (
+                <Button
+                  variant="contained"
+                  color="primary"
+                  href="/sign-in"
+                  sx={{ borderRadius: 8 }} // Rounded buttons
+                >
+                  Sign In
+                </Button>
+              ))}
           </Stack>
         </Box>
 
