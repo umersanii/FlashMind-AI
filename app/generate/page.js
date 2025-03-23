@@ -1,0 +1,234 @@
+"use client";
+
+import { UserButton,useUser } from "@clerk/clerk-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { db } from "../../firebase";
+import { writeBatch, getDoc, collection, doc } from "firebase/firestore";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Grid,
+  Card,
+  CardContent,
+  AppBar,
+  Toolbar,
+} from "@mui/material";
+
+export default function Generate() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const [flashcards, setFlashcards] = useState([]);
+  const [flipped, setFlipped] = useState([]);
+  const [text, setText] = useState("");
+  const [name, setName] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async () => {
+    if (!text.trim()) {
+      alert("Please enter some text to generate flashcards.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        body: text,
+      });
+      if (!response.ok) {
+        throw new Error("Failed to generate flashcards");
+      }
+
+      const data = await response.json();
+      setFlashcards(data);
+    } catch (error) {
+      console.error("Error generating flashcards:", error);
+      alert("An error occurred while generating flashcards. Please try again.");
+    }
+  };
+
+  const handleCardClick = (index) => {
+    const newFlipped = [...flipped];
+    newFlipped[index] = !newFlipped[index];
+    setFlipped(newFlipped);
+  };
+
+  const handleOpenDialog = () => {
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
+  const saveFlashcards = async () => {
+    if (!name) {
+      alert("Please enter a name for your flashcard set.");
+      return;
+    }
+
+    const batch = writeBatch(db);
+    const userDocRef = doc(collection(db, "users"), user.id);
+    const docSnap = await getDoc(userDocRef);
+
+    if (docSnap.exists()) {
+      const collection = docSnap.data().flashcards || [];
+      if (collection.find((set) => set.name === name)) {
+        alert("A flashcard set with that name already exists.");
+        return;
+      } else {
+        collection.push({ name, flashcards });
+        batch.set(userDocRef, { flashcardSets: collection }, { merge: true });
+      }
+    } else {
+      batch.set(userDocRef, { flashcardSets: [{ name }] });
+    }
+
+    const colRef = collection(userDocRef, name);
+    flashcards.forEach((card) => {
+      const cardDocRef = doc(colRef);
+      batch.set(cardDocRef, card);
+    });
+
+    await batch.commit();
+    handleCloseDialog();
+    router.push("/flashcards");
+  };
+
+  return (
+    <>
+      <AppBar
+        position="static"
+        color="primary"
+        elevation={0}
+        sx={{ borderRadius: 2 }} // Rounded AppBar
+      >
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            Flashcard SaaS
+          </Typography>
+          {isLoaded && isSignedIn ? (
+            <UserButton />
+          ) : (
+            <>
+              <Button color="inherit" href="/sign-in">
+                Sign In
+              </Button>
+              <Button color="inherit" href="/sign-up">
+                Sign Up
+              </Button>
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
+      <Container maxWidth="md">
+        <Dialog
+          open={dialogOpen}
+          onClose={handleCloseDialog}
+          sx={{ borderRadius: 2 }}
+        >
+          <DialogTitle>Save Flashcard Set</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Please enter a name for your flashcard set.
+            </DialogContentText>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="Set Name"
+              type="text"
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              sx={{ borderRadius: 2 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseDialog} sx={{ borderRadius: 8 }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={saveFlashcards}
+              color="primary"
+              sx={{ borderRadius: 8 }}
+            >
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
+        <Box sx={{ my: 4 }}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Generate Flashcards
+          </Typography>
+          <TextField
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            label="Enter text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            sx={{ mb: 2, borderRadius: 2 }}
+          />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            fullWidth
+            sx={{ borderRadius: 8 }}
+          >
+            Generate Flashcards
+          </Button>
+        </Box>
+
+        {flashcards.length > 0 && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h5" component="h2" gutterBottom>
+              Generated Flashcards
+            </Typography>
+            <Grid container spacing={2}>
+              {flashcards.map((flashcard, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card
+                    onClick={() => handleCardClick(index)}
+                    sx={{ borderRadius: 4, boxShadow: "none" }}
+                  >
+                    <CardContent>
+                      <Typography variant="h6">Front:</Typography>
+                      <Typography>{flashcard.front}</Typography>
+                      <Typography variant="h6" sx={{ mt: 2 }}>
+                        Back:
+                      </Typography>
+                      <Typography>{flashcard.back}</Typography>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+
+        {flashcards.length > 0 && (
+          <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleOpenDialog}
+              sx={{ borderRadius: 8 }}
+            >
+              Save Flashcards
+            </Button>
+          </Box>
+        )}
+      </Container>
+    </>
+  );
+}
