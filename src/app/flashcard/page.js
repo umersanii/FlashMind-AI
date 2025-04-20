@@ -352,6 +352,7 @@ export default function Flashcard() {
           pb: 8,
           px: fullscreen ? 2 : undefined,
         }}
+      
       >
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
@@ -467,7 +468,7 @@ export default function Flashcard() {
             )}
 
             {viewMode === "carousel" ? (
-              <Box sx={{ position: "relative" }}>
+              <Box sx={{ position: "relative" }} height={fullscreen ? "90vh" : "10vh"}>
                 {fullscreen && (
                   <Box sx={{ position: "absolute", top: 0, left: 0, zIndex: 10, p: 2 }}>
                     <IconButton
@@ -492,6 +493,7 @@ export default function Flashcard() {
                     minHeight: fullscreen ? "calc(100vh - 200px)" : 400,
                     position: "relative",
                   }}
+                  height={"100%"}
                 >
                   <IconButton
                     onClick={handlePrevCard}
@@ -522,11 +524,12 @@ export default function Flashcard() {
                       }
                       sx={{
                         width: { xs: "100%", sm: fullscreen ? "60%" : 400 },
-                        height: fullscreen ? "100%" : 350,
+                        // height: fullscreen ? "100%" : 350,
                         perspective: "1000px",
                         cursor: "pointer",
                         position: "relative",
                       }}
+                      height={"100%"}
                     >
                       {filteredCards[currentCardIndex] && (
                         <Box

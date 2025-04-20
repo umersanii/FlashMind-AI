@@ -427,12 +427,12 @@ export default function Flashcards() {
                 onClick={handleOpenAddCollectionDialog}
                 sx={{
                   height: 48,
-                  minWidth: { xs: "100%", sm: "auto" },
+                  // minWidth: { xs: "100%", sm: "auto" },
                   flex: { xs: 1, sm: "none" },
                   whiteSpace: "nowrap",
                 }}
               >
-                New Collection
+                New
               </Button>
               <Button
                 variant="contained"
@@ -440,7 +440,7 @@ export default function Flashcards() {
                 onClick={handleGeneratePageClick}
                 sx={{
                   height: 48,
-                  minWidth: { xs: "100%", sm: "auto" },
+                  // minWidth: { xs: "100%", sm: "auto" },
                   flex: { xs: 1, sm: "none" },
                   whiteSpace: "nowrap",
                 }}
