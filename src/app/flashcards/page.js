@@ -52,7 +52,6 @@ const getRandomGradient = () => {
 
 // Sample data for preview mode
 
-
 export default function Flashcards() {
   const { isLoaded, isSignedIn, user } = useUser()
   const [flashcardSets, setFlashcardSets] = useState([])
@@ -215,7 +214,21 @@ export default function Flashcards() {
   }
 
   const handleEditFlashcard = async () => {
+    if (!editFlashcard.front || !editFlashcard.back) {
+      setError("Please fill in both fields.")
+      return
+    }
+
     try {
+      if (isPreviewMode) {
+        const updatedSets = [...flashcardSets]
+        updatedSets[selectedSetIndex].flashcards[selectedFlashcardIndex] = editFlashcard
+        setFlashcardSets(updatedSets)
+        setSuccess("Flashcard updated successfully (Preview Mode).")
+        handleCloseEditFlashcardDialog()
+        return
+      }
+
       const setRef = doc(db, "users", user.id)
       const docSnap = await getDoc(setRef)
       const flashcardSets = docSnap.data().flashcardSets || []

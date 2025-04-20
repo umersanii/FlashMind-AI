@@ -63,14 +63,12 @@ export default function GenerateCards() {
   const theme = useTheme()
   const [isPreviewMode, setIsPreviewMode] = useState(false)
 
-  // New state variables for the enhanced UI
   const [difficulty, setDifficulty] = useState(2)
   const [numQuestions, setNumQuestions] = useState(10)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [viewMode, setViewMode] = useState(0)
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 
-  // Check if we're in preview mode
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isLoaded) {
@@ -81,14 +79,12 @@ export default function GenerateCards() {
     return () => clearTimeout(timer)
   }, [isLoaded])
 
-  // Handle authentication
   useEffect(() => {
     if (isLoaded && !isSignedIn && !isPreviewMode) {
       router.push("/")
     }
   }, [isLoaded, isSignedIn, router, isPreviewMode])
 
-  // If still loading or not signed in, don't render the page content
   if (!isLoaded && !isPreviewMode) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
@@ -101,11 +97,6 @@ export default function GenerateCards() {
 
   useEffect(() => {
     let isMounted = true
-    // let shouldFetchCollections = false // No longer needed
-
-    // if (isLoaded && isSignedIn) {
-    //   shouldFetchCollections = true
-    // }
 
     const fetchCollections = async () => {
       try {

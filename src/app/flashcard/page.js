@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useUser } from "@clerk/nextjs"
-import { collection, doc, getDocs } from "firebase/firestore"
+import { collection, doc, getDocs, updateDoc } from "firebase/firestore"
 import { db } from "../../utils/firebase"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -25,6 +25,11 @@ import {
   Tooltip,
   useTheme,
   useMediaQuery,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
 } from "@mui/material"
 import {
   ChevronLeft as ChevronLeftIcon,
@@ -40,44 +45,24 @@ import {
   Shuffle as ShuffleIcon,
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material"
 import { motion, AnimatePresence } from "framer-motion"
 import Navbar from "../../components/ui/navbar"
+import ChatBot from "../../components/chat-bot"
+
+import User from "../../models/user.model"
 
 const MotionBox = motion(Box)
 const MotionPaper = motion(Paper)
 
-// Sample data for preview mode
-const sampleFlashcards = [
-  {
-    id: "1",
-    front: "What is photosynthesis?",
-    back: "The process by which plants convert light energy into chemical energy.",
-  },
-  {
-    id: "2",
-    front: "What is cellular respiration?",
-    back: "The process by which cells break down glucose to release energy.",
-  },
-  { id: "3", front: "What is DNA?", back: "Deoxyribonucleic acid, the genetic material of living organisms." },
-  {
-    id: "4",
-    front: "What is the Pythagorean theorem?",
-    back: "In a right triangle, the square of the hypotenuse equals the sum of the squares of the other two sides.",
-  },
-  {
-    id: "5",
-    front: "What is a prime number?",
-    back: "A natural number greater than 1 that is not a product of two smaller natural numbers.",
-  },
-]
 
 export default function Flashcard() {
   const { isLoaded, isSignedIn, user } = useUser()
   const [flashcards, setFlashcards] = useState([])
   const [flipped, setFlipped] = useState({})
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState("carousel") // 'grid' or 'carousel'
+  const [viewMode, setViewMode] = useState("carousel")
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [collectionName, setCollectionName] = useState("")
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -87,6 +72,8 @@ export default function Flashcard() {
   const [filteredCards, setFilteredCards] = useState([])
   const [progress, setProgress] = useState(0)
   const [isPreviewMode, setIsPreviewMode] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
+  const [editingCard, setEditingCard] = useState(null)
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -96,13 +83,12 @@ export default function Flashcard() {
   const searchParams = useSearchParams()
   const search = searchParams.get("id")
 
-  // Check if we're in preview mode
+  const myUser = isPreviewMode ? { generateFlashcardSet: mockGenerateFlashcards } : new User(user || {})
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isLoaded) {
         setIsPreviewMode(true)
-        setFlashcards(sampleFlashcards)
-        setFilteredCards(sampleFlashcards)
         setCollectionName("Sample Collection")
         setLoading(false)
       }
@@ -127,7 +113,6 @@ export default function Flashcard() {
         setFilteredCards(flashcardsData)
         setCollectionName(search)
 
-        // Initialize progress
         setProgress(0)
       } catch (error) {
         console.error("Error fetching flashcards:", error)
@@ -141,7 +126,6 @@ export default function Flashcard() {
     }
   }, [search, user, isLoaded, isSignedIn, isPreviewMode])
 
-  // Update filtered cards when bookmarks change
   useEffect(() => {
     if (showBookmarkedOnly) {
       const bookmarked = flashcards.filter((card) => bookmarkedCards[card.id])
@@ -154,7 +138,6 @@ export default function Flashcard() {
     }
   }, [bookmarkedCards, showBookmarkedOnly, flashcards, currentCardIndex])
 
-  // Update progress
   useEffect(() => {
     if (filteredCards.length > 0) {
       const flippedCount = Object.values(flipped).filter(Boolean).length
@@ -218,6 +201,37 @@ export default function Flashcard() {
   const resetProgress = () => {
     setFlipped({})
     setCurrentCardIndex(0)
+  }
+
+  const handleEditCard = (index) => {
+    setEditingCard({
+      index,
+      data: { ...filteredCards[index] },
+    })
+    setEditDialogOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingCard) return
+
+    try {
+      const updatedCards = [...filteredCards]
+      updatedCards[editingCard.index] = editingCard.data
+
+      if (!isPreviewMode) {
+        const userDocRef = doc(collection(db, "users"), user.id)
+        const colRef = collection(userDocRef, collectionName)
+        const cardDocRef = doc(colRef, filteredCards[editingCard.index].id)
+        await updateDoc(cardDocRef, editingCard.data)
+      }
+
+      setFilteredCards(updatedCards)
+      setFlashcards(updatedCards)
+      setEditDialogOpen(false)
+      setEditingCard(null)
+    } catch (error) {
+      console.error("Error updating flashcard:", error)
+    }
   }
 
   if (!isLoaded || !isSignedIn) {
@@ -558,23 +572,35 @@ export default function Flashcard() {
                             <Typography variant="caption" sx={{ position: "absolute", bottom: 16, opacity: 0.7 }}>
                               Click to flip
                             </Typography>
-                            <IconButton
-                              onClick={(e) => toggleBookmark(filteredCards[currentCardIndex].id, e)}
-                              sx={{
-                                position: "absolute",
-                                top: 16,
-                                right: 16,
-                                color: bookmarkedCards[filteredCards[currentCardIndex].id]
-                                  ? "primary.contrastText"
-                                  : "rgba(0, 0, 0, 0.5)",
-                              }}
-                            >
-                              {bookmarkedCards[filteredCards[currentCardIndex].id] ? (
-                                <BookmarkIcon />
-                              ) : (
-                                <BookmarkBorderIcon />
-                              )}
-                            </IconButton>
+                            <Box sx={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 1 }}>
+                              <IconButton
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleEditCard(currentCardIndex)
+                                }}
+                                sx={{
+                                  color: "primary.contrastText",
+                                  bgcolor: "rgba(0, 0, 0, 0.2)",
+                                  "&:hover": { bgcolor: "rgba(0, 0, 0, 0.3)" },
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                onClick={(e) => toggleBookmark(filteredCards[currentCardIndex].id, e)}
+                                sx={{
+                                  color: bookmarkedCards[filteredCards[currentCardIndex].id]
+                                    ? "primary.contrastText"
+                                    : "rgba(0, 0, 0, 0.5)",
+                                }}
+                              >
+                                {bookmarkedCards[filteredCards[currentCardIndex].id] ? (
+                                  <BookmarkIcon />
+                                ) : (
+                                  <BookmarkBorderIcon />
+                                )}
+                              </IconButton>
+                            </Box>
                           </Paper>
                           <Paper
                             elevation={0}
@@ -609,23 +635,34 @@ export default function Flashcard() {
                             <Typography variant="caption" sx={{ position: "absolute", bottom: 16, opacity: 0.7 }}>
                               Click to flip back
                             </Typography>
-                            <IconButton
-                              onClick={(e) => toggleBookmark(filteredCards[currentCardIndex].id, e)}
-                              sx={{
-                                position: "absolute",
-                                top: 16,
-                                right: 16,
-                                color: bookmarkedCards[filteredCards[currentCardIndex].id]
-                                  ? "primary.main"
-                                  : "text.secondary",
-                              }}
-                            >
-                              {bookmarkedCards[filteredCards[currentCardIndex].id] ? (
-                                <BookmarkIcon />
-                              ) : (
-                                <BookmarkBorderIcon />
-                              )}
-                            </IconButton>
+                            <Box sx={{ position: "absolute", top: 16, right: 16, display: "flex", gap: 1 }}>
+                              <IconButton
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleEditCard(currentCardIndex)
+                                }}
+                                sx={{
+                                  color: "text.secondary",
+                                  "&:hover": { bgcolor: "action.hover" },
+                                }}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                              <IconButton
+                                onClick={(e) => toggleBookmark(filteredCards[currentCardIndex].id, e)}
+                                sx={{
+                                  color: bookmarkedCards[filteredCards[currentCardIndex].id]
+                                    ? "primary.main"
+                                    : "text.secondary",
+                                }}
+                              >
+                                {bookmarkedCards[filteredCards[currentCardIndex].id] ? (
+                                  <BookmarkIcon />
+                                ) : (
+                                  <BookmarkBorderIcon />
+                                )}
+                              </IconButton>
+                            </Box>
                           </Paper>
                         </Box>
                       )}
@@ -716,17 +753,37 @@ export default function Flashcard() {
                           >
                             {flashcard.front}
                           </Typography>
-                          <IconButton
-                            onClick={(e) => toggleBookmark(flashcard.id, e)}
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              color: bookmarkedCards[flashcard.id] ? "primary.contrastText" : "rgba(0, 0, 0, 0.5)",
-                            }}
-                          >
-                            {bookmarkedCards[flashcard.id] ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                          </IconButton>
+                          <Box sx={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 1 }}>
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditCard(index)
+                              }}
+                              sx={{
+                                color: "primary.contrastText",
+                                bgcolor: "rgba(0, 0, 0, 0.2)",
+                                "&:hover": { bgcolor: "rgba(0, 0, 0, 0.3)" },
+                                width: 24,
+                                height: 24,
+                              }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              onClick={(e) => toggleBookmark(flashcard.id, e)}
+                              sx={{
+                                color: bookmarkedCards[flashcard.id] ? "primary.contrastText" : "rgba(0, 0, 0, 0.5)",
+                                width: 24,
+                                height: 24,
+                              }}
+                            >
+                              {bookmarkedCards[flashcard.id] ? (
+                                <BookmarkIcon fontSize="small" />
+                              ) : (
+                                <BookmarkBorderIcon fontSize="small" />
+                              )}
+                            </IconButton>
+                          </Box>
                         </Paper>
                         <Paper
                           elevation={0}
@@ -757,17 +814,35 @@ export default function Flashcard() {
                           >
                             {flashcard.back}
                           </Typography>
-                          <IconButton
-                            onClick={(e) => toggleBookmark(flashcard.id, e)}
-                            sx={{
-                              position: "absolute",
-                              top: 8,
-                              right: 8,
-                              color: bookmarkedCards[flashcard.id] ? "primary.main" : "text.secondary",
-                            }}
-                          >
-                            {bookmarkedCards[flashcard.id] ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-                          </IconButton>
+                          <Box sx={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 1 }}>
+                            <IconButton
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                handleEditCard(index)
+                              }}
+                              sx={{
+                                color: "text.secondary",
+                                width: 24,
+                                height: 24,
+                              }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              onClick={(e) => toggleBookmark(flashcard.id, e)}
+                              sx={{
+                                color: bookmarkedCards[flashcard.id] ? "primary.main" : "text.secondary",
+                                width: 24,
+                                height: 24,
+                              }}
+                            >
+                              {bookmarkedCards[flashcard.id] ? (
+                                <BookmarkIcon fontSize="small" />
+                              ) : (
+                                <BookmarkBorderIcon fontSize="small" />
+                              )}
+                            </IconButton>
+                          </Box>
                         </Paper>
                       </Box>
                     </MotionPaper>
@@ -794,6 +869,62 @@ export default function Flashcard() {
           {fullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
         </Fab>
       </Zoom>
+
+      {/* Study Assistant Chat Bot */}
+      <ChatBot context={{ collectionName }} user={myUser}/>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ pb: 1, pt: 3 }}>
+          <Typography variant="h6" fontWeight={600}>
+            Edit Flashcard
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          {editingCard && (
+            <>
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Front (Question)"
+                fullWidth
+                variant="outlined"
+                value={editingCard.data.front}
+                onChange={(e) =>
+                  setEditingCard({
+                    ...editingCard,
+                    data: { ...editingCard.data, front: e.target.value },
+                  })
+                }
+                sx={{ mb: 3 }}
+              />
+              <TextField
+                margin="dense"
+                label="Back (Answer)"
+                fullWidth
+                variant="outlined"
+                multiline
+                rows={3}
+                value={editingCard.data.back}
+                onChange={(e) =>
+                  setEditingCard({
+                    ...editingCard,
+                    data: { ...editingCard.data, back: e.target.value },
+                  })
+                }
+              />
+            </>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button onClick={() => setEditDialogOpen(false)} variant="outlined">
+            Cancel
+          </Button>
+          <Button onClick={handleSaveEdit} variant="contained">
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   )
 }
