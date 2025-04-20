@@ -1,6 +1,6 @@
 "use client"
 
-import { UserButton, useUser } from "@clerk/clerk-react"
+import { useUser } from "@clerk/clerk-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { db } from "../../utils/firebase"
@@ -19,8 +19,6 @@ import {
   Grid,
   Card,
   CardContent,
-  AppBar,
-  Toolbar,
   FormControl,
   InputLabel,
   Select,
@@ -36,17 +34,19 @@ import {
   Pagination,
   Fade,
   Zoom,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material"
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Save as SaveIcon,
-  School as SchoolIcon,
   Settings as SettingsIcon,
   Lightbulb as LightbulbIcon,
   Psychology as PsychologyIcon,
 } from "@mui/icons-material"
 import User from "../../models/user.model"
+import Navbar from "../../components/ui/navbar"
 
 export default function GenerateCards() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -60,34 +60,52 @@ export default function GenerateCards() {
   const [flashcards, setFlashcards] = useState([])
   const [isGenerating, setIsGenerating] = useState(false)
   const [collectionsLoaded, setCollectionsLoaded] = useState(false)
+  const theme = useTheme()
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
 
   // New state variables for the enhanced UI
-  const [difficulty, setDifficulty] = useState(2) // 1-3: Easy, Medium, Hard
+  const [difficulty, setDifficulty] = useState(2)
   const [numQuestions, setNumQuestions] = useState(10)
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
-  const [viewMode, setViewMode] = useState(0) // 0: Single Card, 1: Grid View
+  const [viewMode, setViewMode] = useState(0)
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+
+  // Check if we're in preview mode
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        setIsPreviewMode(true)
+      }
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [isLoaded])
 
   // Handle authentication
   useEffect(() => {
-    if (isLoaded && !isSignedIn) {
+    if (isLoaded && !isSignedIn && !isPreviewMode) {
       router.push("/")
     }
-  }, [isLoaded, isSignedIn, router])
+  }, [isLoaded, isSignedIn, router, isPreviewMode])
 
   // If still loading or not signed in, don't render the page content
-  if (!isLoaded || !isSignedIn) {
-    return null
+  if (!isLoaded && !isPreviewMode) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+      </Box>
+    )
   }
 
-  const myUser = new User(user)
+  const myUser = isPreviewMode ? { generateFlashcardSet: mockGenerateFlashcards } : new User(user || {})
 
   useEffect(() => {
     let isMounted = true
-    let shouldFetchCollections = false
+    // let shouldFetchCollections = false // No longer needed
 
-    if (isLoaded && isSignedIn) {
-      shouldFetchCollections = true
-    }
+    // if (isLoaded && isSignedIn) {
+    //   shouldFetchCollections = true
+    // }
 
     const fetchCollections = async () => {
       try {
@@ -105,7 +123,14 @@ export default function GenerateCards() {
     }
 
     // Always fetch collections, but conditionally use the result
-    fetchCollections()
+    // Conditionally fetch collections based on authentication state
+    const shouldFetchCollections = isLoaded && isSignedIn
+
+    if (shouldFetchCollections) {
+      fetchCollections()
+    } else {
+      setCollectionsLoaded(true)
+    }
 
     return () => {
       isMounted = false
@@ -256,53 +281,46 @@ export default function GenerateCards() {
     }
   }
 
-  return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-      <AppBar
-        position="static"
-        elevation={0}
-        sx={{
-          borderRadius: 0,
-          background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-        }}
-      >
-        <Toolbar>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SchoolIcon sx={{ mr: 1 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              <Button variant="text" color="inherit" href="/" sx={{ fontWeight: 600 }}>
-                Flashcard SaaS
-              </Button>
-            </Typography>
-          </Box>
-          <Box sx={{ flexGrow: 1 }} />
-          {isLoaded && isSignedIn ? (
-            <UserButton />
-          ) : (
-            <>
-              <Button color="inherit" href="/sign-in" sx={{ mr: 2 }}>
-                Sign In
-              </Button>
-              <Button color="inherit" variant="outlined" href="/sign-up">
-                Sign Up
-              </Button>
-            </>
-          )}
-        </Toolbar>
-      </AppBar>
+  // Mock function for preview mode
+  async function mockGenerateFlashcards(text) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          flashcards: [
+            { front: "What is a flashcard?", back: "A card with a question on one side and the answer on the other." },
+            {
+              front: "How do flashcards help with learning?",
+              back: "They use active recall and spaced repetition to improve memory retention.",
+            },
+            {
+              front: "What is the best way to use flashcards?",
+              back: "Review them regularly and focus on the ones you find most difficult.",
+            },
+            {
+              front: "What is FlashMind?",
+              back: "An AI-powered flashcard application that helps you learn more effectively.",
+            },
+          ],
+        })
+      }, 1500)
+    })
+  }
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+  return (
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>
+      <Navbar />
+
+      <Container maxWidth="lg" sx={{ py: 4, mt: 8 }}>
         <Dialog
           open={dialogOpen}
           onClose={handleCloseDialog}
           PaperProps={{
-            sx: { borderRadius: 3, boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)" },
+            sx: { borderRadius: 3 },
           }}
         >
           <DialogTitle sx={{ pb: 1, pt: 3, px: 3 }}>
             <Box display="flex" alignItems="center">
-              <SaveIcon sx={{ mr: 1, color: "#3b82f6" }} />
+              <SaveIcon sx={{ mr: 1, color: "primary.main" }} />
               <Typography variant="h5" fontWeight={600}>
                 Save Flashcard Set
               </Typography>
@@ -350,7 +368,6 @@ export default function GenerateCards() {
             <Button
               onClick={saveFlashcards}
               variant="contained"
-              color="primary"
               startIcon={<SaveIcon />}
               sx={{ borderRadius: 2, px: 3 }}
             >
@@ -365,25 +382,25 @@ export default function GenerateCards() {
             p: 4,
             borderRadius: 3,
             mb: 4,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)",
-            background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-            border: "1px solid #e0f2fe",
+            border: "1px solid",
+            borderColor: "divider",
+            background: "linear-gradient(135deg, rgba(255,215,0,0.05) 0%, rgba(255,165,0,0.05) 100%)",
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-            <LightbulbIcon sx={{ mr: 2, color: "#3b82f6" }} />
-            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700, color: "#1e293b", m: 0 }}>
+            <LightbulbIcon sx={{ mr: 2, color: "primary.main" }} />
+            <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700, m: 0 }}>
               Generate Flashcards
             </Typography>
           </Box>
 
-          <Typography variant="body1" sx={{ mb: 4, color: "#64748b" }}>
+          <Typography variant="body1" sx={{ mb: 4, color: "text.secondary" }}>
             Enter your study material below, set your preferences, and our AI will create flashcards to help you learn
             more effectively.
           </Typography>
 
-          <Grid container spacing={4}>
-            <Grid item xs={12} md={8}>
+          <Grid container spacing={4} justifyContent={isMobile ? "center" : "space-between"}>
+            <Grid item xs={12} md={8} width={isMobile ? "100%":"65%" }>
               <TextField
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -391,26 +408,27 @@ export default function GenerateCards() {
                 placeholder="Paste your notes, textbook content, or any study material here..."
                 fullWidth
                 multiline
-                rows={8}
+                rows={14}
+                height="100%"
                 variant="outlined"
                 sx={{
                   mb: { xs: 2, md: 0 },
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
                 }}
               />
             </Grid>
 
-            <Grid item xs={12} md={4}>
-              <Paper elevation={0} sx={{ p: 3, borderRadius: 2, height: "100%", border: "1px solid #e2e8f0" }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: "#1e293b" }}>
+            <Grid item xs={12} md={4} width={isMobile ? "auto":"30%"}>
+              <Paper
+                elevation={0}
+                sx={{ p: 3, borderRadius: 2, height: "100%", border: "1px solid", borderColor: "divider" }}
+              >
+                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
                   <SettingsIcon sx={{ mr: 1, fontSize: 20, verticalAlign: "text-bottom" }} />
                   Generation Settings
                 </Typography>
 
                 <Box sx={{ mb: 4 }}>
-                  <Typography id="difficulty-slider" gutterBottom sx={{ color: "#64748b", fontWeight: 500 }}>
+                  <Typography id="difficulty-slider" gutterBottom sx={{ color: "text.secondary", fontWeight: 500 }}>
                     Difficulty Level:{" "}
                     <Chip
                       label={getDifficultyLabel(difficulty)}
@@ -426,12 +444,12 @@ export default function GenerateCards() {
                     min={1}
                     max={3}
                     aria-labelledby="difficulty-slider"
-                    sx={{ color: difficulty === 1 ? "#10b981" : difficulty === 2 ? "#3b82f6" : "#ef4444" }}
+                    sx={{ color: difficulty === 1 ? "success.main" : difficulty === 2 ? "primary.main" : "error.main" }}
                   />
                 </Box>
 
                 <Box sx={{ mb: 4 }}>
-                  <Typography gutterBottom sx={{ color: "#64748b", fontWeight: 500 }}>
+                  <Typography gutterBottom sx={{ color: "text.secondary", fontWeight: 500 }}>
                     Number of Questions
                   </Typography>
                   <FormControl fullWidth variant="outlined" size="small">
@@ -453,12 +471,6 @@ export default function GenerateCards() {
                   fullWidth
                   size="large"
                   startIcon={isGenerating ? null : <PsychologyIcon />}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-                    boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.5)",
-                  }}
                 >
                   {isGenerating ? (
                     <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -490,7 +502,7 @@ export default function GenerateCards() {
           <Fade in={flashcards.length > 0} timeout={500}>
             <Box sx={{ mt: 4, mb: 8 }}>
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 3 }}>
-                <Typography variant="h5" component="h2" sx={{ fontWeight: 600, color: "#1e293b" }}>
+                <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
                   Your Flashcards
                 </Typography>
                 <Box>
@@ -511,9 +523,9 @@ export default function GenerateCards() {
                       disabled={currentCardIndex === 0}
                       sx={{
                         mr: 2,
-                        bgcolor: currentCardIndex === 0 ? "transparent" : "rgba(59, 130, 246, 0.1)",
+                        bgcolor: currentCardIndex === 0 ? "transparent" : "rgba(255, 215, 0, 0.1)",
                         "&:hover": {
-                          bgcolor: "rgba(59, 130, 246, 0.2)",
+                          bgcolor: "rgba(255, 215, 0, 0.2)",
                         },
                       }}
                     >
@@ -542,6 +554,7 @@ export default function GenerateCards() {
                             transition: "transform 0.8s",
                             transformStyle: "preserve-3d",
                             transform: flipped[currentCardIndex] ? "rotateY(180deg)" : "rotateY(0deg)",
+                            backgroundColor: "transparent",
                           }}
                         >
                           <CardContent
@@ -556,10 +569,9 @@ export default function GenerateCards() {
                               alignItems: "center",
                               p: 4,
                               borderRadius: 4,
-                              backgroundColor: "#3b82f6",
-                              color: "white",
-                              boxShadow:
-                                "0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)",
+                              backgroundColor: "primary.main",
+                              color: "primary.contrastText",
+                              boxShadow: theme.shadows[10],
                             }}
                           >
                             <Typography
@@ -587,11 +599,12 @@ export default function GenerateCards() {
                               alignItems: "center",
                               p: 4,
                               borderRadius: 4,
-                              backgroundColor: "white",
-                              color: "#1e293b",
+                              backgroundColor: "background.paper",
+                              color: "text.primary",
                               transform: "rotateY(180deg)",
-                              border: "1px solid #e2e8f0",
-                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                              border: "1px solid",
+                              borderColor: "divider",
+                              boxShadow: theme.shadows[10],
                             }}
                           >
                             <Typography
@@ -615,9 +628,9 @@ export default function GenerateCards() {
                       disabled={currentCardIndex === flashcards.length - 1}
                       sx={{
                         ml: 2,
-                        bgcolor: currentCardIndex === flashcards.length - 1 ? "transparent" : "rgba(59, 130, 246, 0.1)",
+                        bgcolor: currentCardIndex === flashcards.length - 1 ? "transparent" : "rgba(255, 215, 0, 0.1)",
                         "&:hover": {
-                          bgcolor: "rgba(59, 130, 246, 0.2)",
+                          bgcolor: "rgba(255, 215, 0, 0.2)",
                         },
                       }}
                     >
@@ -626,7 +639,7 @@ export default function GenerateCards() {
                   </Box>
 
                   <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 2 }}>
-                    <Typography variant="body2" sx={{ mr: 2, color: "#64748b" }}>
+                    <Typography variant="body2" sx={{ mr: 2, color: "text.secondary" }}>
                       Card {currentCardIndex + 1} of {flashcards.length}
                     </Typography>
                     <Pagination
@@ -650,7 +663,7 @@ export default function GenerateCards() {
                           sx={{
                             height: 200,
                             borderRadius: 3,
-                            perspective: "1000px",
+                            perspective: "100%",
                             backgroundColor: "transparent",
                             boxShadow: "none",
                             cursor: "pointer",
@@ -679,10 +692,9 @@ export default function GenerateCards() {
                                 alignItems: "center",
                                 p: 3,
                                 borderRadius: 3,
-                                backgroundColor: "#3b82f6",
-                                color: "white",
-                                boxShadow:
-                                  "0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2)",
+                                backgroundColor: "primary.main",
+                                color: "primary.contrastText",
+                                boxShadow: theme.shadows[5],
                               }}
                             >
                               <Typography
@@ -708,11 +720,12 @@ export default function GenerateCards() {
                                 alignItems: "center",
                                 p: 3,
                                 borderRadius: 3,
-                                backgroundColor: "white",
-                                color: "#1e293b",
+                                backgroundColor: "background.paper",
+                                color: "text.primary",
                                 transform: "rotateY(180deg)",
-                                border: "1px solid #e2e8f0",
-                                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.05)",
+                                border: "1px solid",
+                                borderColor: "divider",
+                                boxShadow: theme.shadows[5],
                               }}
                             >
                               <Typography
@@ -740,12 +753,9 @@ export default function GenerateCards() {
                   startIcon={<SaveIcon />}
                   size="large"
                   sx={{
-                    borderRadius: 2,
                     py: 1.5,
                     px: 4,
                     fontWeight: 600,
-                    background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-                    boxShadow: "0 4px 6px -1px rgba(59, 130, 246, 0.4)",
                   }}
                 >
                   Save Flashcards

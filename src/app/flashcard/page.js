@@ -1,53 +1,119 @@
 "use client"
 
+import { useEffect, useState, useRef } from "react"
 import { useUser } from "@clerk/nextjs"
-import { useEffect, useState } from "react"
 import { collection, doc, getDocs } from "firebase/firestore"
 import { db } from "../../utils/firebase"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
-  Container,
-  Grid,
-  Card,
-  CardActionArea,
-  CardContent,
-  Typography,
   Box,
-  AppBar,
-  Toolbar,
+  Container,
+  Typography,
   Button,
   IconButton,
-  CircularProgress,
-  Pagination,
   Paper,
-  Fade,
+  Grid,
+  CircularProgress,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Fab,
   Zoom,
+  Tooltip,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material"
 import {
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
-  School as SchoolIcon,
+  Lightbulb as LightbulbIcon,
   Home as HomeIcon,
   ViewModule as ViewModuleIcon,
   ViewCarousel as ViewCarouselIcon,
+  ArrowBack as ArrowBackIcon,
+  Refresh as RefreshIcon,
+  Fullscreen as FullscreenIcon,
+  FullscreenExit as FullscreenExitIcon,
+  Shuffle as ShuffleIcon,
+  Bookmark as BookmarkIcon,
+  BookmarkBorder as BookmarkBorderIcon,
 } from "@mui/icons-material"
+import { motion, AnimatePresence } from "framer-motion"
+import Navbar from "../../components/ui/navbar"
+
+const MotionBox = motion(Box)
+const MotionPaper = motion(Paper)
+
+// Sample data for preview mode
+const sampleFlashcards = [
+  {
+    id: "1",
+    front: "What is photosynthesis?",
+    back: "The process by which plants convert light energy into chemical energy.",
+  },
+  {
+    id: "2",
+    front: "What is cellular respiration?",
+    back: "The process by which cells break down glucose to release energy.",
+  },
+  { id: "3", front: "What is DNA?", back: "Deoxyribonucleic acid, the genetic material of living organisms." },
+  {
+    id: "4",
+    front: "What is the Pythagorean theorem?",
+    back: "In a right triangle, the square of the hypotenuse equals the sum of the squares of the other two sides.",
+  },
+  {
+    id: "5",
+    front: "What is a prime number?",
+    back: "A natural number greater than 1 that is not a product of two smaller natural numbers.",
+  },
+]
 
 export default function Flashcard() {
   const { isLoaded, isSignedIn, user } = useUser()
   const [flashcards, setFlashcards] = useState([])
   const [flipped, setFlipped] = useState({})
   const [loading, setLoading] = useState(true)
-  const [viewMode, setViewMode] = useState("grid") // 'grid' or 'carousel'
+  const [viewMode, setViewMode] = useState("carousel") // 'grid' or 'carousel'
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [collectionName, setCollectionName] = useState("")
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
+  const [bookmarkedCards, setBookmarkedCards] = useState({})
+  const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
+  const [filteredCards, setFilteredCards] = useState([])
+  const [progress, setProgress] = useState(0)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
+
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+  const cardContainerRef = useRef(null)
 
   const router = useRouter()
   const searchParams = useSearchParams()
   const search = searchParams.get("id")
 
+  // Check if we're in preview mode
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        setIsPreviewMode(true)
+        setFlashcards(sampleFlashcards)
+        setFilteredCards(sampleFlashcards)
+        setCollectionName("Sample Collection")
+        setLoading(false)
+      }
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [isLoaded])
+
   useEffect(() => {
     async function getFlashcard() {
-      if (!search || !user) return
+      if (!search || !user || isPreviewMode) return
 
       setLoading(true)
       try {
@@ -58,7 +124,11 @@ export default function Flashcard() {
           flashcardsData.push({ id: doc.id, ...doc.data() })
         })
         setFlashcards(flashcardsData)
+        setFilteredCards(flashcardsData)
         setCollectionName(search)
+
+        // Initialize progress
+        setProgress(0)
       } catch (error) {
         console.error("Error fetching flashcards:", error)
       } finally {
@@ -66,10 +136,31 @@ export default function Flashcard() {
       }
     }
 
-    if (isLoaded && isSignedIn) {
+    if (isLoaded && isSignedIn && !isPreviewMode) {
       getFlashcard()
     }
-  }, [search, user, isLoaded, isSignedIn])
+  }, [search, user, isLoaded, isSignedIn, isPreviewMode])
+
+  // Update filtered cards when bookmarks change
+  useEffect(() => {
+    if (showBookmarkedOnly) {
+      const bookmarked = flashcards.filter((card) => bookmarkedCards[card.id])
+      setFilteredCards(bookmarked)
+      if (bookmarked.length > 0 && currentCardIndex >= bookmarked.length) {
+        setCurrentCardIndex(0)
+      }
+    } else {
+      setFilteredCards(flashcards)
+    }
+  }, [bookmarkedCards, showBookmarkedOnly, flashcards, currentCardIndex])
+
+  // Update progress
+  useEffect(() => {
+    if (filteredCards.length > 0) {
+      const flippedCount = Object.values(flipped).filter(Boolean).length
+      setProgress(Math.round((flippedCount / filteredCards.length) * 100))
+    }
+  }, [flipped, filteredCards])
 
   const handleCardClick = (id) => {
     setFlipped((prev) => ({
@@ -79,7 +170,7 @@ export default function Flashcard() {
   }
 
   const handleNextCard = () => {
-    if (currentCardIndex < flashcards.length - 1) {
+    if (currentCardIndex < filteredCards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1)
     }
   }
@@ -90,130 +181,340 @@ export default function Flashcard() {
     }
   }
 
-  const handlePageChange = (event, page) => {
-    setCurrentCardIndex(page - 1)
-  }
-
   const toggleViewMode = () => {
     setViewMode(viewMode === "grid" ? "carousel" : "grid")
   }
 
+  const toggleDrawer = (open) => (event) => {
+    if (event.type === "keydown" && (event.key === "Tab" || event.key === "Shift")) {
+      return
+    }
+    setDrawerOpen(open)
+  }
+
+  const toggleFullscreen = () => {
+    setFullscreen(!fullscreen)
+  }
+
+  const toggleBookmark = (id, e) => {
+    if (e) e.stopPropagation()
+    setBookmarkedCards((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }))
+  }
+
+  const toggleShowBookmarkedOnly = () => {
+    setShowBookmarkedOnly(!showBookmarkedOnly)
+    setCurrentCardIndex(0)
+  }
+
+  const shuffleCards = () => {
+    const shuffled = [...filteredCards].sort(() => Math.random() - 0.5)
+    setFilteredCards(shuffled)
+    setCurrentCardIndex(0)
+  }
+
+  const resetProgress = () => {
+    setFlipped({})
+    setCurrentCardIndex(0)
+  }
+
   if (!isLoaded || !isSignedIn) {
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-        <CircularProgress />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <CircularProgress sx={{ color: "primary.main" }} />
       </Box>
     )
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-      <AppBar
-        position="static"
-        elevation={0}
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "background.default",
+        color: "text.primary",
+        ...(fullscreen && {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 1300,
+          overflow: "auto",
+        }),
+      }}
+    >
+      {!fullscreen && <Navbar />}
+
+      <Drawer
+        anchor="left"
+        open={drawerOpen}
+        onClose={toggleDrawer(false)}
         sx={{
-          borderRadius: 0,
-          background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          "& .MuiDrawer-paper": {
+            width: 240,
+            bgcolor: "background.paper",
+            color: "text.primary",
+          },
         }}
       >
-        <Toolbar>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <SchoolIcon sx={{ mr: 1 }} />
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              <Button variant="text" color="inherit" href="/" sx={{ fontWeight: 600 }}>
-                Flashcard SaaS
-              </Button>
-            </Typography>
-          </Box>
-          <Box sx={{ flexGrow: 1 }} />
-          <Button color="inherit" href="/flashcards" startIcon={<HomeIcon />} sx={{ mr: 2 }}>
-            My Collections
-          </Button>
-          <IconButton color="inherit" onClick={toggleViewMode} sx={{ mr: 2 }}>
-            {viewMode === "grid" ? <ViewCarouselIcon /> : <ViewModuleIcon />}
-          </IconButton>
-        </Toolbar>
-      </AppBar>
+        <Box sx={{ p: 2, display: "flex", alignItems: "center", borderBottom: "1px solid", borderColor: "divider" }}>
+          <LightbulbIcon sx={{ color: "primary.main", mr: 1 }} />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              background: "linear-gradient(45deg, #FFD700, #FFA500)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            FlashMind
+          </Typography>
+        </Box>
+        <List>
+          <ListItem button onClick={() => router.push("/")}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              <HomeIcon />
+            </ListItemIcon>
+            <ListItemText primary="Home" />
+          </ListItem>
+          <ListItem button onClick={() => router.push("/flashcards")}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              <ViewModuleIcon />
+            </ListItemIcon>
+            <ListItemText primary="My Library" />
+          </ListItem>
+          <ListItem button onClick={() => router.push("/generate-cards")}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              <LightbulbIcon />
+            </ListItemIcon>
+            <ListItemText primary="Create Cards" />
+          </ListItem>
+        </List>
+        <Divider sx={{ bgcolor: "divider" }} />
+        <List>
+          <ListItem button onClick={toggleViewMode}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              {viewMode === "grid" ? <ViewCarouselIcon /> : <ViewModuleIcon />}
+            </ListItemIcon>
+            <ListItemText primary={viewMode === "grid" ? "Card View" : "Grid View"} />
+          </ListItem>
+          <ListItem button onClick={toggleShowBookmarkedOnly}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              {showBookmarkedOnly ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+            </ListItemIcon>
+            <ListItemText primary={showBookmarkedOnly ? "Show All Cards" : "Bookmarked Only"} />
+          </ListItem>
+          <ListItem button onClick={shuffleCards}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              <ShuffleIcon />
+            </ListItemIcon>
+            <ListItemText primary="Shuffle Cards" />
+          </ListItem>
+          <ListItem button onClick={resetProgress}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              <RefreshIcon />
+            </ListItemIcon>
+            <ListItemText primary="Reset Progress" />
+          </ListItem>
+        </List>
+      </Drawer>
 
-      <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Container
+        maxWidth={fullscreen ? false : "lg"}
+        sx={{
+          pt: fullscreen ? 2 : 10,
+          pb: 8,
+          px: fullscreen ? 2 : undefined,
+        }}
+      >
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
-            <CircularProgress />
+            <CircularProgress sx={{ color: "primary.main" }} />
           </Box>
-        ) : flashcards.length === 0 ? (
-          <Paper
+        ) : filteredCards.length === 0 ? (
+          <MotionPaper
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
             elevation={0}
             sx={{
               p: 4,
               my: 4,
-              borderRadius: 3,
-              background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)",
-              border: "1px solid #e0f2fe",
+              borderRadius: 4,
+              bgcolor: "background.paper",
+              border: "1px solid",
+              borderColor: "divider",
               textAlign: "center",
             }}
           >
             <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
-              No flashcards found
+              {showBookmarkedOnly ? "No bookmarked flashcards" : "No flashcards found"}
             </Typography>
-            <Typography variant="body1" sx={{ mb: 3 }}>
-              This collection doesn't have any flashcards yet.
+            <Typography variant="body1" sx={{ mb: 3, color: "text.secondary" }}>
+              {showBookmarkedOnly
+                ? "You haven't bookmarked any flashcards in this collection yet."
+                : "This collection doesn't have any flashcards yet."}
             </Typography>
-            <Button
-              variant="contained"
-              color="primary"
-              href="/flashcards"
-              sx={{
-                borderRadius: 2,
-                background: "linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)",
-              }}
-            >
-              Back to Collections
-            </Button>
-          </Paper>
+            {showBookmarkedOnly ? (
+              <Button variant="contained" onClick={toggleShowBookmarkedOnly}>
+                Show All Cards
+              </Button>
+            ) : (
+              <Button variant="contained" onClick={() => router.push("/flashcards")}>
+                Back to Collections
+              </Button>
+            )}
+          </MotionPaper>
         ) : (
-          <Fade in={true} timeout={500}>
-            <Box>
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, color: "#1e293b" }}>
-                  {collectionName}
-                </Typography>
-                <Typography variant="body1" sx={{ color: "#64748b", mt: 1 }}>
-                  {flashcards.length} flashcards in this collection
-                </Typography>
-              </Box>
-
-              {viewMode === "carousel" ? (
+          <Box>
+            {!fullscreen && (
+              <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <Box>
-                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mb: 4 }}>
-                    <IconButton
-                      onClick={handlePrevCard}
-                      disabled={currentCardIndex === 0}
+                  <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
+                    {collectionName}
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+                    <Typography variant="body1" sx={{ color: "text.secondary", mr: 2 }}>
+                      {filteredCards.length} flashcards
+                      {showBookmarkedOnly && ` (bookmarked)`}
+                    </Typography>
+                    <Box
                       sx={{
-                        mr: 2,
-                        bgcolor: currentCardIndex === 0 ? "transparent" : "rgba(59, 130, 246, 0.1)",
-                        "&:hover": {
-                          bgcolor: "rgba(59, 130, 246, 0.2)",
-                        },
+                        width: 100,
+                        height: 6,
+                        bgcolor: "divider",
+                        borderRadius: 3,
+                        overflow: "hidden",
                       }}
                     >
-                      <ChevronLeftIcon />
-                    </IconButton>
-
-                    <Zoom in={true} timeout={300}>
-                      <Card
-                        onClick={() => handleCardClick(flashcards[currentCardIndex]?.id)}
+                      <Box
                         sx={{
-                          width: { xs: "100%", sm: 400 },
-                          height: 300,
-                          borderRadius: 4,
-                          perspective: "1000px",
-                          backgroundColor: "transparent",
-                          boxShadow: "none",
-                          cursor: "pointer",
-                          position: "relative",
+                          width: `${progress}%`,
+                          height: "100%",
+                          bgcolor: "primary.main",
+                          transition: "width 0.3s ease-in-out",
                         }}
-                      >
+                      />
+                    </Box>
+                    <Typography variant="body2" sx={{ color: "text.secondary", ml: 1 }}>
+                      {progress}%
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Tooltip title={showBookmarkedOnly ? "Show All Cards" : "Show Bookmarked Only"}>
+                    <IconButton
+                      onClick={toggleShowBookmarkedOnly}
+                      sx={{
+                        color: showBookmarkedOnly ? "primary.main" : "text.secondary",
+                        bgcolor: showBookmarkedOnly ? "rgba(255, 215, 0, 0.1)" : "transparent",
+                        "&:hover": { bgcolor: "rgba(255, 215, 0, 0.1)" },
+                      }}
+                    >
+                      {showBookmarkedOnly ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Shuffle Cards">
+                    <IconButton
+                      onClick={shuffleCards}
+                      sx={{
+                        color: "text.secondary",
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <ShuffleIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Reset Progress">
+                    <IconButton
+                      onClick={resetProgress}
+                      sx={{
+                        color: "text.secondary",
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+            )}
+
+            {viewMode === "carousel" ? (
+              <Box sx={{ position: "relative" }}>
+                {fullscreen && (
+                  <Box sx={{ position: "absolute", top: 0, left: 0, zIndex: 10, p: 2 }}>
+                    <IconButton
+                      onClick={() => router.push("/flashcards")}
+                      sx={{
+                        color: "text.primary",
+                        bgcolor: "rgba(0, 0, 0, 0.3)",
+                        "&:hover": { bgcolor: "rgba(0, 0, 0, 0.5)" },
+                      }}
+                    >
+                      <ArrowBackIcon />
+                    </IconButton>
+                  </Box>
+                )}
+
+                <Box
+                  ref={cardContainerRef}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    minHeight: fullscreen ? "calc(100vh - 200px)" : 400,
+                    position: "relative",
+                  }}
+                >
+                  <IconButton
+                    onClick={handlePrevCard}
+                    disabled={currentCardIndex === 0}
+                    sx={{
+                      position: "absolute",
+                      left: { xs: 0, md: -30 },
+                      zIndex: 10,
+                      color: currentCardIndex === 0 ? "text.disabled" : "primary.main",
+                      bgcolor: currentCardIndex === 0 ? "transparent" : "rgba(255, 215, 0, 0.1)",
+                      "&:hover": {
+                        bgcolor: currentCardIndex === 0 ? "transparent" : "rgba(255, 215, 0, 0.2)",
+                      },
+                    }}
+                  >
+                    <ChevronLeftIcon fontSize="large" />
+                  </IconButton>
+
+                  <AnimatePresence mode="wait">
+                    <MotionBox
+                      key={`card-${currentCardIndex}`}
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.3 }}
+                      onClick={() =>
+                        filteredCards[currentCardIndex] && handleCardClick(filteredCards[currentCardIndex].id)
+                      }
+                      sx={{
+                        width: { xs: "100%", sm: fullscreen ? "60%" : 400 },
+                        height: fullscreen ? "100%" : 350,
+                        perspective: "1000px",
+                        cursor: "pointer",
+                        position: "relative",
+                      }}
+                    >
+                      {filteredCards[currentCardIndex] && (
                         <Box
                           sx={{
                             position: "relative",
@@ -221,10 +522,13 @@ export default function Flashcard() {
                             height: "100%",
                             transition: "transform 0.8s",
                             transformStyle: "preserve-3d",
-                            transform: flipped[flashcards[currentCardIndex]?.id] ? "rotateY(180deg)" : "rotateY(0deg)",
+                            transform: flipped[filteredCards[currentCardIndex].id]
+                              ? "rotateY(180deg)"
+                              : "rotateY(0deg)",
                           }}
                         >
-                          <CardContent
+                          <Paper
+                            elevation={0}
                             sx={{
                               position: "absolute",
                               width: "100%",
@@ -236,26 +540,44 @@ export default function Flashcard() {
                               alignItems: "center",
                               p: 4,
                               borderRadius: 4,
-                              backgroundColor: "#3b82f6",
-                              color: "white",
-                              boxShadow:
-                                "0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)",
+                              bgcolor: "primary.main",
+                              color: "primary.contrastText",
+                              boxShadow: theme.shadows[10],
                             }}
                           >
                             <Typography
                               variant="h6"
                               sx={{
                                 textAlign: "center",
-                                fontWeight: 500,
+                                fontWeight: 600,
+                                fontSize: fullscreen ? "1.5rem" : undefined,
                               }}
                             >
-                              {flashcards[currentCardIndex]?.front || ""}
+                              {filteredCards[currentCardIndex].front}
                             </Typography>
                             <Typography variant="caption" sx={{ position: "absolute", bottom: 16, opacity: 0.7 }}>
                               Click to flip
                             </Typography>
-                          </CardContent>
-                          <CardContent
+                            <IconButton
+                              onClick={(e) => toggleBookmark(filteredCards[currentCardIndex].id, e)}
+                              sx={{
+                                position: "absolute",
+                                top: 16,
+                                right: 16,
+                                color: bookmarkedCards[filteredCards[currentCardIndex].id]
+                                  ? "primary.contrastText"
+                                  : "rgba(0, 0, 0, 0.5)",
+                              }}
+                            >
+                              {bookmarkedCards[filteredCards[currentCardIndex].id] ? (
+                                <BookmarkIcon />
+                              ) : (
+                                <BookmarkBorderIcon />
+                              )}
+                            </IconButton>
+                          </Paper>
+                          <Paper
+                            elevation={0}
                             sx={{
                               position: "absolute",
                               width: "100%",
@@ -267,152 +589,211 @@ export default function Flashcard() {
                               alignItems: "center",
                               p: 4,
                               borderRadius: 4,
-                              backgroundColor: "white",
-                              color: "#1e293b",
+                              bgcolor: "background.paper",
+                              color: "text.primary",
                               transform: "rotateY(180deg)",
-                              border: "1px solid #e2e8f0",
-                              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+                              border: "1px solid",
+                              borderColor: "divider",
+                              boxShadow: theme.shadows[10],
                             }}
                           >
                             <Typography
                               variant="body1"
                               sx={{
                                 textAlign: "center",
+                                fontSize: fullscreen ? "1.2rem" : undefined,
                               }}
                             >
-                              {flashcards[currentCardIndex]?.back || ""}
+                              {filteredCards[currentCardIndex].back}
                             </Typography>
                             <Typography variant="caption" sx={{ position: "absolute", bottom: 16, opacity: 0.7 }}>
                               Click to flip back
                             </Typography>
-                          </CardContent>
-                        </Box>
-                      </Card>
-                    </Zoom>
-
-                    <IconButton
-                      onClick={handleNextCard}
-                      disabled={currentCardIndex === flashcards.length - 1}
-                      sx={{
-                        ml: 2,
-                        bgcolor: currentCardIndex === flashcards.length - 1 ? "transparent" : "rgba(59, 130, 246, 0.1)",
-                        "&:hover": {
-                          bgcolor: "rgba(59, 130, 246, 0.2)",
-                        },
-                      }}
-                    >
-                      <ChevronRightIcon />
-                    </IconButton>
-                  </Box>
-
-                  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 2 }}>
-                    <Typography variant="body2" sx={{ mr: 2, color: "#64748b" }}>
-                      Card {currentCardIndex + 1} of {flashcards.length}
-                    </Typography>
-                    <Pagination
-                      count={flashcards.length}
-                      page={currentCardIndex + 1}
-                      onChange={handlePageChange}
-                      color="primary"
-                      size="small"
-                    />
-                  </Box>
-                </Box>
-              ) : (
-                <Grid container spacing={3}>
-                  {flashcards.map((flashcard) => (
-                    <Grid item xs={12} sm={6} md={4} key={flashcard.id}>
-                      <Zoom in={true} style={{ transitionDelay: "100ms" }}>
-                        <Card
-                          sx={{
-                            height: 200,
-                            borderRadius: 3,
-                            perspective: "1000px",
-                            backgroundColor: "transparent",
-                            boxShadow: "none",
-                            cursor: "pointer",
-                            position: "relative",
-                          }}
-                        >
-                          <CardActionArea onClick={() => handleCardClick(flashcard.id)} sx={{ height: "100%" }}>
-                            <Box
+                            <IconButton
+                              onClick={(e) => toggleBookmark(filteredCards[currentCardIndex].id, e)}
                               sx={{
-                                position: "relative",
-                                width: "100%",
-                                height: "100%",
-                                transition: "transform 0.6s",
-                                transformStyle: "preserve-3d",
-                                transform: flipped[flashcard.id] ? "rotateY(180deg)" : "rotateY(0deg)",
+                                position: "absolute",
+                                top: 16,
+                                right: 16,
+                                color: bookmarkedCards[filteredCards[currentCardIndex].id]
+                                  ? "primary.main"
+                                  : "text.secondary",
                               }}
                             >
-                              <CardContent
-                                sx={{
-                                  position: "absolute",
-                                  width: "100%",
-                                  height: "100%",
-                                  backfaceVisibility: "hidden",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                  p: 3,
-                                  borderRadius: 3,
-                                  backgroundColor: "#3b82f6",
-                                  color: "white",
-                                  boxShadow:
-                                    "0 4px 6px -1px rgba(59, 130, 246, 0.3), 0 2px 4px -1px rgba(59, 130, 246, 0.2)",
-                                }}
-                              >
-                                <Typography
-                                  variant="body1"
-                                  sx={{
-                                    textAlign: "center",
-                                    fontWeight: 500,
-                                  }}
-                                >
-                                  {flashcard.front}
-                                </Typography>
-                              </CardContent>
-                              <CardContent
-                                sx={{
-                                  position: "absolute",
-                                  width: "100%",
-                                  height: "100%",
-                                  backfaceVisibility: "hidden",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                  p: 3,
-                                  borderRadius: 3,
-                                  backgroundColor: "white",
-                                  color: "#1e293b",
-                                  transform: "rotateY(180deg)",
-                                  border: "1px solid #e2e8f0",
-                                  boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.05)",
-                                }}
-                              >
-                                <Typography
-                                  variant="body2"
-                                  sx={{
-                                    textAlign: "center",
-                                  }}
-                                >
-                                  {flashcard.back}
-                                </Typography>
-                              </CardContent>
-                            </Box>
-                          </CardActionArea>
-                        </Card>
-                      </Zoom>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
-          </Fade>
+                              {bookmarkedCards[filteredCards[currentCardIndex].id] ? (
+                                <BookmarkIcon />
+                              ) : (
+                                <BookmarkBorderIcon />
+                              )}
+                            </IconButton>
+                          </Paper>
+                        </Box>
+                      )}
+                    </MotionBox>
+                  </AnimatePresence>
+
+                  <IconButton
+                    onClick={handleNextCard}
+                    disabled={currentCardIndex === filteredCards.length - 1}
+                    sx={{
+                      position: "absolute",
+                      right: { xs: 0, md: -30 },
+                      zIndex: 10,
+                      color: currentCardIndex === filteredCards.length - 1 ? "text.disabled" : "primary.main",
+                      bgcolor: currentCardIndex === filteredCards.length - 1 ? "transparent" : "rgba(255, 215, 0, 0.1)",
+                      "&:hover": {
+                        bgcolor:
+                          currentCardIndex === filteredCards.length - 1 ? "transparent" : "rgba(255, 215, 0, 0.2)",
+                      },
+                    }}
+                  >
+                    <ChevronRightIcon fontSize="large" />
+                  </IconButton>
+                </Box>
+
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 3 }}>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    Card {currentCardIndex + 1} of {filteredCards.length}
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <Grid container spacing={3}>
+                {filteredCards.map((flashcard, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={flashcard.id}>
+                    <MotionPaper
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      elevation={0}
+                      onClick={() => handleCardClick(flashcard.id)}
+                      sx={{
+                        height: 200,
+                        borderRadius: 3,
+                        perspective: "1000px",
+                        backgroundColor: "transparent",
+                        cursor: "pointer",
+                        position: "relative",
+                        border: "1px solid",
+                        borderColor: "divider",
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          position: "relative",
+                          width: "100%",
+                          height: "100%",
+                          transition: "transform 0.6s",
+                          transformStyle: "preserve-3d",
+                          transform: flipped[flashcard.id] ? "rotateY(180deg)" : "rotateY(0deg)",
+                        }}
+                      >
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            backfaceVisibility: "hidden",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            p: 3,
+                            borderRadius: 3,
+                            bgcolor: "primary.main",
+                            color: "primary.contrastText",
+                            boxShadow: theme.shadows[5],
+                          }}
+                        >
+                          <Typography
+                            variant="body1"
+                            sx={{
+                              textAlign: "center",
+                              fontWeight: 600,
+                              fontSize: "0.95rem",
+                            }}
+                          >
+                            {flashcard.front}
+                          </Typography>
+                          <IconButton
+                            onClick={(e) => toggleBookmark(flashcard.id, e)}
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              color: bookmarkedCards[flashcard.id] ? "primary.contrastText" : "rgba(0, 0, 0, 0.5)",
+                            }}
+                          >
+                            {bookmarkedCards[flashcard.id] ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                          </IconButton>
+                        </Paper>
+                        <Paper
+                          elevation={0}
+                          sx={{
+                            position: "absolute",
+                            width: "100%",
+                            height: "100%",
+                            backfaceVisibility: "hidden",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            p: 3,
+                            borderRadius: 3,
+                            bgcolor: "background.paper",
+                            color: "text.primary",
+                            transform: "rotateY(180deg)",
+                            border: "1px solid",
+                            borderColor: "divider",
+                            boxShadow: theme.shadows[5],
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              textAlign: "center",
+                            }}
+                          >
+                            {flashcard.back}
+                          </Typography>
+                          <IconButton
+                            onClick={(e) => toggleBookmark(flashcard.id, e)}
+                            sx={{
+                              position: "absolute",
+                              top: 8,
+                              right: 8,
+                              color: bookmarkedCards[flashcard.id] ? "primary.main" : "text.secondary",
+                            }}
+                          >
+                            {bookmarkedCards[flashcard.id] ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+                          </IconButton>
+                        </Paper>
+                      </Box>
+                    </MotionPaper>
+                  </Grid>
+                ))}
+              </Grid>
+            )}
+          </Box>
         )}
       </Container>
+
+      {/* Floating Action Buttons */}
+      <Zoom in={!loading && filteredCards.length > 0}>
+        <Fab
+          color="primary"
+          aria-label="fullscreen"
+          onClick={toggleFullscreen}
+          sx={{
+            position: "fixed",
+            bottom: 16,
+            right: 16,
+          }}
+        >
+          {fullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+        </Fab>
+      </Zoom>
     </Box>
   )
 }
