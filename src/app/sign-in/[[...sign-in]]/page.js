@@ -15,7 +15,7 @@ export default function SignInPage() {
     <>
       <AppBar
         position="static"
-        sx={{ borderRadius: 2, boxShadow: "none" }} // Rounded AppBar, No Shadow
+        sx={{ borderRadius: 2, boxShadow: "none" }}
       >
         <Toolbar>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>

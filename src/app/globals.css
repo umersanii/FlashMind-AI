@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Primary colors */
+  --primary-main: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  
+  /* Secondary colors */
+  --secondary-main: #ec4899;
+  --secondary-light: #f472b6;
+  --secondary-dark: #db2777;
+  
+  /* Background colors */
+  --background-default: #f9fafb;
+  --background-paper: #ffffff;
+  
+  /* Text colors */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-disabled: #9ca3af;
+  
+  /* Border radius */
+  --border-radius: 12px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background-default);
+  color: var(--text-primary);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Custom MUI overrides */
+.MuiButton-root {
+  box-shadow: none !important;
+  text-transform: none !important;
+  font-weight: 600 !important;
+  border-radius: var(--border-radius) !important;
+}
+
+.MuiButton-containedPrimary {
+  background-color: var(--primary-main) !important;
+}
+
+.MuiButton-containedPrimary:hover {
+  background-color: var(--primary-dark) !important;
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2) !important;
+}
+
+.MuiButton-containedSecondary {
+  background-color: var(--secondary-main) !important;
+}
+
+.MuiButton-containedSecondary:hover {
+  background-color: var(--secondary-dark) !important;
+  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.2) !important;
+}
+
+.MuiCard-root {
+  box-shadow: var(--shadow-md) !important;
+  transition: all 0.3s ease !important;
+  border-radius: var(--border-radius) !important;
+}
+
+.MuiCard-root:hover {
+  box-shadow: var(--shadow-lg) !important;
+  transform: translateY(-2px) !important;
+}
+
+.MuiPaper-root {
+  box-shadow: var(--shadow-md) !important;
+  border-radius: var(--border-radius) !important;
+}
+
+.MuiAppBar-root {
+  background: linear-gradient(90deg, var(--primary-main) 0%, #8b5cf6 100%) !important;
+}
+
+.MuiTypography-h4 {
+  font-weight: 700 !important;
+}
+
+.MuiTypography-h5 {
+  font-weight: 600 !important;
+}
+
+/* Flashcard specific styles */
+.flashcard {
+  perspective: 1000px;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+  height: 220px;
+}
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flashcard-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  border-radius: var(--border-radius);
+}
+
+.flashcard-front {
+  background-color: var(--primary-main);
+  color: white;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+}
+
+.flashcard-back {
+  background-color: var(--background-paper);
+  color: var(--text-primary);
+  transform: rotateY(180deg);
+  border: 1px solid var(--primary-light);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.flip-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  opacity: 0.7;
+}
+
+.flashcard-back .flip-icon {
+  color: var(--primary-main);
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.grow-in {
+  animation: growIn 0.3s ease-out;
+}
+
+@keyframes growIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
