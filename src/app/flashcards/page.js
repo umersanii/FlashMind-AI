@@ -121,8 +121,20 @@ export default function Flashcards() {
     }
   }, [user, isPreviewMode])
 
-  const handleCardClick = (id) => {
-    router.push(`/flashcard?id=${id}`)
+  const handleCardClick = (id, isQuiz = false) => {
+    if (isQuiz) {
+      router.push(`/quiz?id=${id}`)
+    } else {
+      router.push(`/flashcard?id=${id}`)
+    }
+  }
+
+  const isQuizSet = (set) => {
+    // Check if the set has the isQuiz property
+    if (set.isQuiz) return true
+
+    // Fallback check: look for quiz-like content in flashcards
+    return set.flashcards.some((card) => card.back && (card.back.includes("Options:") || card.back.includes("Answer:")))
   }
 
   const handleFlip = (index) => {
@@ -542,11 +554,11 @@ export default function Flashcards() {
                     <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
                       <Button
                         variant="text"
-                        onClick={() => handleCardClick(set.name)}
+                        onClick={() => handleCardClick(set.name, isQuizSet(set))}
                         endIcon={<NavigateNextIcon />}
                         sx={{ color: "primary.main" }}
                       >
-                        Study All Cards
+                        {isQuizSet(set) ? "Take Quiz" : "Study All Cards"}
                       </Button>
                       <Button
                         variant="outlined"
@@ -681,11 +693,11 @@ export default function Flashcards() {
                       <Box sx={{ mt: 2, textAlign: "center" }}>
                         <Button
                           variant="text"
-                          onClick={() => handleCardClick(set.name)}
+                          onClick={() => handleCardClick(set.name, isQuizSet(set))}
                           endIcon={<NavigateNextIcon />}
                           sx={{ color: "text.secondary" }}
                         >
-                          View all {set.flashcards.length} cards
+                          View all {set.flashcards.length} {isQuizSet(set) ? "questions" : "cards"}
                         </Button>
                       </Box>
                     )}

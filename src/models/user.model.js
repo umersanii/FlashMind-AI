@@ -37,6 +37,15 @@ class User {
     return deck
   }
 
+  async generateQuiz(text, difficulty = 2, numQuestions = 5) {
+    console.log("Generating quiz for text with difficulty:", difficulty, "and questions:", numQuestions)
+    const model = new AImodel()
+    const response = await model.generateQuiz(text, difficulty, numQuestions)
+    console.log("AI response:", response)
+    
+    return response
+  }
+
   async getChatbotResponse(input, context = "") {
     console.log("Getting chatbot response for input:", input)
     const model = new AImodel()

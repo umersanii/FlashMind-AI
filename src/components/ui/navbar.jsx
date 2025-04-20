@@ -25,6 +25,7 @@ import {
   Home as HomeIcon,
   ViewModule as ViewModuleIcon,
   Psychology as PsychologyIcon,
+  Quiz as QuizIcon,
 } from "@mui/icons-material"
 import { UserButton } from "@clerk/nextjs"
 
@@ -82,6 +83,12 @@ export default function Navbar() {
                 <PsychologyIcon sx={{ color: "primary.main" }} />
               </ListItemIcon>
               <ListItemText primary="Create Cards" />
+            </ListItem>
+            <ListItem button onClick={() => handleNavigation("/generate-quiz")}>
+              <ListItemIcon>
+                <QuizIcon sx={{ color: "primary.main" }} />
+              </ListItemIcon>
+              <ListItemText primary="Create Quiz" />
             </ListItem>
           </>
         )}
@@ -144,6 +151,9 @@ export default function Navbar() {
                 onClick={() => handleNavigation("/generate-cards")}
               >
                 Create Cards
+              </Button>
+              <Button color="inherit" startIcon={<QuizIcon />} onClick={() => handleNavigation("/generate-quiz")}>
+                Create Quiz
               </Button>
             </Box>
           )}

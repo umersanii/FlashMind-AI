@@ -36,6 +36,47 @@ class AImodel {
     return flashcards
   }
 
+  async generateQuiz(text, difficulty = 2, numQuestions = 5) {
+    const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
+
+    const systemPrompt = `
+    You are an intelligent quiz generator for a SaaS platform. Your task is to create concise, informative, and effective multiple-choice quiz questions based on user input. 
+    
+    Create exactly ${numQuestions} quiz questions with a difficulty level of ${difficultyLevel}.
+    
+    For difficulty levels:
+    - easy: Create basic recall questions focusing on fundamental concepts and definitions
+    - medium: Create questions that require understanding relationships between concepts
+    - hard: Create questions that require application of knowledge, analysis, or evaluation
+    
+    Each quiz question should include:
+    1. A clear question
+    2. Four possible answer options
+    3. The index of the correct answer (0-3)
+    
+    Ensure that the content is accurate, educational, and appropriate for the target audience, which may vary from students to professionals.
+    
+    Return in the following JSON format:
+    {
+      "questions":[
+        {
+          "question": "The question text",
+          "options": ["Option A", "Option B", "Option C", "Option D"],
+          "correctAnswer": 2
+        }
+      ]
+    }
+    Just return the JSON, do not return anything extra.
+    `
+
+    const myAPIKey = process.env.NEXT_PUBLIC_LLAMA8B_API_KEY
+
+    const response = await POST(text, systemPrompt, myAPIKey)
+    const quiz = JSON.parse(response)
+
+    return quiz
+  }
+
   async chatbotResponse(input, context = "", apiKey = null) {
     try {
       const systemPrompt = `
@@ -59,7 +100,6 @@ class AImodel {
       throw error
     }
   }
-
 }
 
 export default AImodel

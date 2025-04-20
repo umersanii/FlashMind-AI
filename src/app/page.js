@@ -13,7 +13,6 @@ import {
   useTheme,
   Divider,
   Avatar,
-  colors,
 } from "@mui/material"
 import {
   Lightbulb as LightbulbIcon,
@@ -21,6 +20,7 @@ import {
   Speed as SpeedIcon,
   Devices as DevicesIcon,
   ArrowForward as ArrowForwardIcon,
+  Quiz as QuizIcon,
 } from "@mui/icons-material"
 import { motion } from "framer-motion"
 import Navbar from "../components/ui/navbar"
@@ -57,8 +57,8 @@ export default function Home() {
         }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={4} alignItems="center" justifyContent="space-between">
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={4} alignItems="center" justifyContent={isMobile? "center":"space-between"}>
+            <Grid item xs={12} md={6} width={isMobile ? "100%" : "60%"}>
               <MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                 <MotionTypography
                   variant="h2"
@@ -80,7 +80,7 @@ export default function Home() {
                   variant="h6"
                   sx={{ color: "text.secondary", mb: 4, maxWidth: "600px", lineHeight: 1.6 }}
                 >
-                  Transform any text into intelligent flashcards. Study smarter, not harder with our AI-powered learning
+                  Transform any text into intelligent flashcards and quizzes. Study smarter, not harder with our AI-powered learning
                   platform.
                 </MotionTypography>
 
@@ -105,7 +105,7 @@ export default function Home() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                sx={{ position: "relative", height: { xs: 300, md: 400 },width: "300px" }}
+                sx={{ position: "relative", height: { xs: 300, md: 400 }, width: "300px" }}
               >
                 <Box
                   sx={{
@@ -124,7 +124,6 @@ export default function Home() {
                     p: 3,
                     color: "text.primary",
                     zIndex: 3,
-                    
                   }}
                 >
                   <Typography variant="h6" sx={{ fontWeight: 600, textAlign: "center", color: "#fff" }}>
@@ -234,7 +233,7 @@ export default function Home() {
           <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"}>
             {[
               {
-                icon: <LightbulbIcon sx={{ fontSize: 40, color: "primary.main"}} />,
+                icon: <LightbulbIcon sx={{ fontSize: 40, color: "primary.main" }} />,
                 title: "AI-Powered Generation",
                 description:
                   "Our advanced AI analyzes your content and creates perfect question-answer pairs tailored to your learning needs.",
@@ -258,7 +257,7 @@ export default function Home() {
                   "Access your flashcards on any device. Perfect for on-the-go learning during commutes or breaks.",
               },
             ].map((feature, index) => (
-              <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: "48%",color: "text.primary" }}>
+              <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: isMobile ? "100%" : "48%", color: "text.primary" }}>
                 <MotionPaper
                   initial={{ opacity: 20, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -275,9 +274,7 @@ export default function Home() {
                       transform: "translateY(-8px)",
                       boxShadow: "0 12px 20px rgba(0, 0, 0, 0.2)",
                     },
-                    
                   }}
-                  
                 >
                   <Box sx={{ mb: 2 }}>{feature.icon}</Box>
                   <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
@@ -290,7 +287,6 @@ export default function Home() {
               </Grid>
             ))}
           </Grid>
-          
         </Container>
       </Box>
 
@@ -326,15 +322,15 @@ export default function Home() {
               },
               {
                 step: "02",
-                title: "AI Generates Flashcards",
-                description: "Our AI analyzes your content and automatically creates optimized question-answer pairs.",
+                title: "AI Generates Learning Materials",
+                description: "Our AI analyzes your content and automatically creates optimized flashcards and quizzes.",
                 color: "secondary.main",
               },
               {
                 step: "03",
                 title: "Review & Study",
                 description:
-                  "Study your flashcards with our interactive learning system designed for maximum retention.",
+                  "Study your flashcards and take quizzes with our interactive learning system designed for maximum retention.",
                 color: "success.main",
               },
             ].map((step, index) => (
@@ -387,8 +383,107 @@ export default function Home() {
         </Container>
       </Box>
 
-      {/* Testimonials Section */}
+      {/* Learning Tools Section */}
       <Box sx={{ py: 10, bgcolor: "background.paper" }}>
+        <Container maxWidth="xl">
+          <MotionTypography
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            variant="h3"
+            align="center"
+            sx={{
+              fontWeight: 700,
+              mb: 8,
+              background: "linear-gradient(45deg, #FFD700, #FFA500)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
+          >
+            Our Learning Tools
+          </MotionTypography>
+
+          <Grid container spacing={4} alignItems="stretch" justifyContent="center">
+            <Grid item xs={12} md={6} maxWidth={{ xs: "100%", md: "50%" }}>
+              <MotionPaper
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                elevation={0}
+                sx={{
+                  p: 4,
+                  height: "100%",
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <LightbulbIcon sx={{ fontSize: 40, color: "primary.main", mr: 2 }} />
+                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                    Flashcards
+                  </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ color: "text.secondary", mb: 3, flex: 1 }}>
+                  Create AI-generated flashcards from your study material. Perfect for memorization and quick review. Our
+                  flashcards use active recall to help you remember information more effectively.
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => router.push("/generate-cards")}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  Create Flashcards
+                </Button>
+              </MotionPaper>
+            </Grid>
+            <Grid item xs={12} md={6} maxWidth={{ xs: "100%", md: "50%" }}>
+              <MotionPaper
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+                elevation={0}
+                sx={{
+                  p: 4,
+                  height: "100%",
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  display: "flex",
+                  flexDirection: "column",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                  <QuizIcon sx={{ fontSize: 40, color: "secondary.main", mr: 2 }} />
+                  <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                    Quizzes
+                  </Typography>
+                </Box>
+                <Typography variant="body1" sx={{ color: "text.secondary", mb: 3, flex: 1 }}>
+                  Generate multiple-choice quizzes to test your knowledge. Our AI creates challenging questions with
+                  varying difficulty levels to help you assess your understanding and identify areas for improvement.
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => router.push("/generate-quiz")}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  Create Quiz
+                </Button>
+              </MotionPaper>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* Testimonials Section */}
+      <Box sx={{ py: 10, bgcolor: "background.default" }}>
         <Container maxWidth="xl" sx={{ textAlign: "center" }}>
           <MotionTypography
             initial={{ opacity: 0, y: 20 }}
@@ -429,7 +524,7 @@ export default function Home() {
                   sx={{
                     p: 4,
                     height: "100%",
-                    bgcolor: "background.default",
+                    bgcolor: "background.paper",
                     borderRadius: 4,
                     display: "flex",
                     flexDirection: "column",
@@ -468,7 +563,7 @@ export default function Home() {
       </Box>
 
       {/* CTA Section */}
-      <Box sx={{ py: 10, bgcolor: "background.default" }}>
+      <Box sx={{ py: 10, bgcolor: "background.paper" }}>
         <Container maxWidth="md">
           <MotionPaper
             initial={{ opacity: 0, y: 20 }}
@@ -478,7 +573,7 @@ export default function Home() {
             elevation={0}
             sx={{
               p: { xs: 4, md: 8 },
-              bgcolor: "background.paper",
+              bgcolor: "background.default",
               borderRadius: 4,
               background: "linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%)",
               position: "relative",
@@ -512,7 +607,7 @@ export default function Home() {
               >
                 Ready to Transform Your Learning?
               </Typography>
-              <Typography variant="h6" sx={{ color: "white" , mb: 4, maxWidth: "600px", mx: "auto" }}>
+              <Typography variant="h6" sx={{ color: "white", mb: 4, maxWidth: "600px", mx: "auto" }}>
                 Join thousands of students who are studying smarter, not harder with FlashMind AI.
               </Typography>
               <Button
@@ -534,7 +629,7 @@ export default function Home() {
       </Box>
 
       {/* Footer */}
-      <Box sx={{ py: 6, bgcolor: "background.paper", borderTop: "1px solid", borderColor: "divider" }}>
+      <Box sx={{ py: 6, bgcolor: "background.default", borderTop: "1px solid", borderColor: "divider" }}>
         <Container maxWidth="xl">
           <Grid container spacing={4}>
             <Grid item xs={12} md={4}>

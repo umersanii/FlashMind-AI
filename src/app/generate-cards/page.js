@@ -47,6 +47,8 @@ import {
 } from "@mui/icons-material"
 import User from "../../models/user.model"
 import Navbar from "../../components/ui/navbar"
+import FileUpload from "../../components/file-upload"
+import AudioRecorder from "../../components/audio-recorder"
 
 export default function GenerateCards() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -97,6 +99,11 @@ export default function GenerateCards() {
 
   useEffect(() => {
     let isMounted = true
+    let shouldFetchCollections = false
+
+    if (isLoaded && isSignedIn) {
+      shouldFetchCollections = true
+    }
 
     const fetchCollections = async () => {
       try {
@@ -113,20 +120,23 @@ export default function GenerateCards() {
       }
     }
 
-    // Always fetch collections, but conditionally use the result
-    // Conditionally fetch collections based on authentication state
-    const shouldFetchCollections = isLoaded && isSignedIn
-
-    if (shouldFetchCollections) {
-      fetchCollections()
-    } else {
-      setCollectionsLoaded(true)
+    // Always call fetchCollections, but conditionally execute its logic
+    if (isLoaded) {
+      if (isSignedIn) {
+        fetchCollections()
+      } else {
+        setCollectionsLoaded(true) // Set to true even if not signed in
+      }
     }
 
     return () => {
       isMounted = false
     }
   }, [isLoaded, isSignedIn, user])
+
+  const handleTextExtracted = (extractedText) => {
+    setText(extractedText)
+  }
 
   const handleSubmit = async () => {
     if (!text.trim()) {
@@ -390,8 +400,16 @@ export default function GenerateCards() {
             more effectively.
           </Typography>
 
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600 }}>
+              Input Methods
+            </Typography>
+            <FileUpload onTextExtracted={handleTextExtracted} />
+            <AudioRecorder onTextExtracted={(transcribedText) => setText(text + " " + transcribedText)} />
+          </Box>
+
           <Grid container spacing={4} justifyContent={isMobile ? "center" : "space-between"}>
-            <Grid item xs={12} md={8} width={isMobile ? "100%":"65%" }>
+            <Grid item xs={12} md={8} width={isMobile ? "100%" : "65%"}>
               <TextField
                 value={text}
                 onChange={(e) => setText(e.target.value)}
@@ -408,7 +426,7 @@ export default function GenerateCards() {
               />
             </Grid>
 
-            <Grid item xs={12} md={4} width={isMobile ? "auto":"30%"}>
+            <Grid item xs={12} md={4} width={isMobile ? "auto" : "30%"}>
               <Paper
                 elevation={0}
                 sx={{ p: 3, borderRadius: 2, height: "100%", border: "1px solid", borderColor: "divider" }}
