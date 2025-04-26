@@ -19,7 +19,16 @@ const RecommendedTopics = ({ user }) => {
       try {
         setLoading(true)
   
-        const topics = await user.getRecommendedTopics()
+        // const topics = await user.getRecommendedTopics() // Temporarily commented out for tokken Saving
+        // Simulating API call for demonstration
+        const topics = [
+          { id: 1, topic: "Math", subtopic: "Algebra", confidence: 0.85 },
+          { id: 2, topic: "Science", subtopic: "Physics", confidence: 0.78 },
+          { id: 3, topic: "History", subtopic: "World War II", confidence: 0.92 },
+          { id: 4, topic: "Literature", subtopic: "Shakespeare", confidence: 0.80 },
+          { id: 5, topic: "Geography", subtopic: "Continents", confidence: 0.75 },
+        ]
+        // Uncomment the line below to use the actual API call
   
         console.log("Recommended topics:", topics)
   
