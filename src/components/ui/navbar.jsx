@@ -125,7 +125,7 @@ export default function Navbar() {
             </IconButton>
           )}
           <Box sx={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => handleNavigation("/")}>
-            <LightbulbIcon sx={{ color: "primary.main", mr: 1, fontSize: 28 }} />
+            <LightbulbIcon sx={{ color: "background-default", mr: 1, fontSize: 28 }} />
             <Typography
               variant="h6"
               sx={{
