@@ -15,7 +15,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material"
-import { Mic, MicOff, Delete, Info } from 'lucide-react'
+import { Mic, MicOff, Delete, Info } from "lucide-react"
 
 const AudioRecorder = ({ onTextExtracted }) => {
   const [isRecording, setIsRecording] = useState(false)
@@ -107,7 +107,7 @@ const AudioRecorder = ({ onTextExtracted }) => {
       try {
         // Request microphone permission
         await navigator.mediaDevices.getUserMedia({ audio: true })
-        
+
         setIsRecording(true)
         setTranscript("")
         if (recognitionRef.current) {

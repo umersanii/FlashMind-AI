@@ -1,24 +1,14 @@
-"use client";
+"use client"
 
-import { SignIn } from "@clerk/clerk-react";
-import {
-  AppBar,
-  Button,
-  Container,
-  Toolbar,
-  Typography,
-  Box,
-} from "@mui/material";
+import { SignIn } from "@clerk/clerk-react"
+import { AppBar, Button, Container, Toolbar, Typography, Box } from "@mui/material"
 
 export default function SignInPage() {
   return (
     <>
-      <AppBar
-        position="static"
-        sx={{ borderRadius: 2, boxShadow: "none" }}
-      >
+      <AppBar position="static" sx={{ borderRadius: 2, boxShadow: "none" }}>
         <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
             <Button
               variant="contained"
               color="primary"
@@ -50,5 +40,5 @@ export default function SignInPage() {
         </Box>
       </Container>
     </>
-  );
+  )
 }

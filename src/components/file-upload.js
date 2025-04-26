@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Box, Button, Typography, CircularProgress, Paper } from "@mui/material"
-import { Upload } from 'lucide-react'
+import { Upload } from "lucide-react"
 
 const FileUpload = ({ onTextExtracted }) => {
   const [isUploading, setIsUploading] = useState(false)
@@ -37,15 +37,15 @@ const FileUpload = ({ onTextExtracted }) => {
   const readFileContent = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader()
-      
+
       reader.onload = (event) => {
         resolve(event.target.result)
       }
-      
+
       reader.onerror = (error) => {
         reject(error)
       }
-      
+
       reader.readAsText(file)
     })
   }
@@ -66,13 +66,7 @@ const FileUpload = ({ onTextExtracted }) => {
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center" }}>
-        <Button
-          component="label"
-          variant="outlined"
-          startIcon={<Upload />}
-          sx={{ mr: 2 }}
-          disabled={isUploading}
-        >
+        <Button component="label" variant="outlined" startIcon={<Upload />} sx={{ mr: 2 }} disabled={isUploading}>
           Upload File
           <input type="file" hidden onChange={handleFileChange} accept=".txt,.pdf,.doc,.docx" />
         </Button>

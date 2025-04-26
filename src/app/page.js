@@ -2,6 +2,7 @@
 
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import {
   Box,
   Container,
@@ -13,6 +14,8 @@ import {
   useTheme,
   Divider,
   Avatar,
+  Skeleton,
+  CardContent,
 } from "@mui/material"
 import {
   Lightbulb as LightbulbIcon,
@@ -21,19 +24,51 @@ import {
   Devices as DevicesIcon,
   ArrowForward as ArrowForwardIcon,
   Quiz as QuizIcon,
+  LocalFireDepartment as FireIcon,
+  EmojiEvents as TrophyIcon,
+  CalendarMonth as CalendarIcon,
+  CenterFocusStrong,
 } from "@mui/icons-material"
 import { motion } from "framer-motion"
 import Navbar from "../components/ui/navbar"
+import RecommendedTopics from "../components/recommended-topics"
+import User from "../models/user.model"
 
 const MotionBox = motion(Box)
 const MotionTypography = motion(Typography)
 const MotionPaper = motion(Paper)
+const MotionCard = motion(Paper)
 
 export default function Home() {
-  const { isLoaded, isSignedIn } = useUser()
+  const { isLoaded, isSignedIn, user: clerkUser } = useUser()
+  const [userModel, setUserModel] = useState(null)
+  const [streakData, setStreakData] = useState(null)
+  const [loading, setLoading] = useState(true)
   const router = useRouter()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+
+  useEffect(() => {
+    const initializeUser = async () => {
+      if (isLoaded && isSignedIn && clerkUser) {
+        const user = new User(clerkUser)
+        setUserModel(user)
+
+        try {
+          const streak = await user.loadStreakData()
+          setStreakData(streak)
+        } catch (error) {
+          console.error("Error loading streak data:", error)
+        } finally {
+          setLoading(false)
+        }
+      } else if (isLoaded) {
+        setLoading(false)
+      }
+    }
+
+    initializeUser()
+  }, [isLoaded, isSignedIn, clerkUser])
 
   const handleGetStarted = () => {
     if (isSignedIn) {
@@ -57,7 +92,7 @@ export default function Home() {
         }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={4} alignItems="center" justifyContent={isMobile? "center":"space-between"}>
+          <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"}>
             <Grid item xs={12} md={6} width={isMobile ? "100%" : "60%"}>
               <MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                 <MotionTypography
@@ -80,8 +115,8 @@ export default function Home() {
                   variant="h6"
                   sx={{ color: "text.secondary", mb: 4, maxWidth: "600px", lineHeight: 1.6 }}
                 >
-                  Transform any text into intelligent flashcards and quizzes. Study smarter, not harder with our AI-powered learning
-                  platform.
+                  Transform any text into intelligent flashcards and quizzes. Study smarter, not harder with our
+                  AI-powered learning platform.
                 </MotionTypography>
 
                 <Button
@@ -208,6 +243,143 @@ export default function Home() {
         />
       </Box>
 
+      {/* User Dashboard Section (only for signed in users) */}
+      {isLoaded && isSignedIn && (
+        <Box sx={{ py: 6, bgcolor: "background.default" }}>
+          <Container maxWidth="xl" sx={{ textAlign: "center" }}>
+            <MotionTypography
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                mb: 4,
+                background: "linear-gradient(45deg, #FFD700, #FFA500)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >
+              Your Learning Dashboard
+            </MotionTypography>
+
+            <Grid container spacing={4} justifyContent="center">
+              {/* Streak Stats */}
+              <Grid item xs={12} md={4}>
+                <MotionPaper
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    height: "100%",
+                    textAlign: "left",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+                    <FireIcon sx={{ color: "primary.main", mr: 1 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      Your Learning Streak
+                    </Typography>
+                  </Box>
+
+                  {loading ? (
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                      <Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 2 }} />
+                      <Skeleton variant="rectangular" width="100%" height={60} sx={{ borderRadius: 2 }} />
+                    </Box>
+                  ) : (
+                    <>
+                      <Grid container spacing={2} sx={{ mb: 3 }}>
+                        <Grid item xs={6}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              textAlign: "center",
+                              borderRadius: 2,
+                              bgcolor: "rgba(255, 215, 0, 0.1)",
+                              border: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          >
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: "primary.main" }}>
+                              {streakData?.currentStreak || 0}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                              Current Streak
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Paper
+                            elevation={0}
+                            sx={{
+                              p: 2,
+                              textAlign: "center",
+                              borderRadius: 2,
+                              bgcolor: "rgba(255, 215, 0, 0.1)",
+                              border: "1px solid",
+                              borderColor: "divider",
+                            }}
+                          >
+                            <Typography variant="h4" sx={{ fontWeight: 700, color: "primary.main" }}>
+                              {streakData?.longestStreak || 0}
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                              Longest Streak
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      </Grid>
+
+                      <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                        <CalendarIcon sx={{ color: "primary.main", mr: 1, fontSize: 20 }} />
+                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                          Total Study Days: {streakData?.studyDates?.length || 0}
+                        </Typography>
+                      </Box>
+
+                      {streakData?.lastStudyDate && (
+                        <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
+                          Last studied: {new Date(streakData.lastStudyDate).toLocaleDateString()}
+                        </Typography>
+                      )}
+
+                      <Button variant="outlined" onClick={() => router.push("/generate-cards")} sx={{ mt: 1 }}>
+                        Study Today
+                      </Button>
+                    </>
+                  )}
+                </MotionPaper>
+              </Grid>
+
+              {/* Recommended Topics */}
+              <Grid item xs={12} >
+                <MotionBox
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  {loading ? (
+                    <Skeleton variant="rectangular" width="100%" height={300} sx={{ borderRadius: 3}} />
+                  ) : (
+                    <RecommendedTopics user={userModel} />
+                  )}
+                </MotionBox>
+              </Grid>
+            </Grid>
+          </Container>
+        </Box>
+      )}
+
+
       {/* Features Section */}
       <Box sx={{ py: 10, bgcolor: "background.paper" }}>
         <Container maxWidth="xl">
@@ -231,44 +403,59 @@ export default function Home() {
           </MotionTypography>
 
           <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"}>
-            {[
+          {[
               {
-                icon: <LightbulbIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+                icon: <LightbulbIcon sx={{ fontSize: 40, color: "#fff" }} />,
                 title: "AI-Powered Generation",
                 description:
                   "Our advanced AI analyzes your content and creates perfect question-answer pairs tailored to your learning needs.",
+                color: "linear-gradient(135deg, #FF9800, #FF5722)",
               },
               {
-                icon: <PsychologyIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+                icon: <PsychologyIcon sx={{ fontSize: 40, color: "#fff" }} />,
                 title: "Optimized for Retention",
                 description:
                   "Scientifically designed to maximize knowledge retention using spaced repetition and active recall techniques.",
+                color: "linear-gradient(135deg, #2196F3, #3F51B5)",
               },
               {
-                icon: <SpeedIcon sx={{ fontSize: 40, color: "success.main" }} />,
+                icon: <SpeedIcon sx={{ fontSize: 40, color: "#fff" }} />,
                 title: "Learn Faster",
                 description:
                   "Save hours of manual flashcard creation. Focus on studying, not preparing study materials.",
+                color: "linear-gradient(135deg, #4CAF50, #009688)",
               },
               {
-                icon: <DevicesIcon sx={{ fontSize: 40, color: "warning.main" }} />,
+                icon: <DevicesIcon sx={{ fontSize: 40, color: "#fff" }} />,
                 title: "Study Anywhere",
                 description:
                   "Access your flashcards on any device. Perfect for on-the-go learning during commutes or breaks.",
+                color: "linear-gradient(135deg, #9C27B0, #673AB7)",
+              },
+              {
+                icon: <FireIcon sx={{ fontSize: 40, color: "#fff" }} />,
+                title: "Daily Streaks",
+                description: "Stay motivated with daily streaks and track your learning progress over time.",
+                color: "linear-gradient(135deg, #FF5722, #F44336)",
+              },
+              {
+                icon: <TrophyIcon sx={{ fontSize: 40, color: "#fff" }} />,
+                title: "Personalized Recommendations",
+                description: "Get smart topic recommendations based on your learning history and interests.",
+                color: "linear-gradient(135deg, #FFC107, #FF9800)",
               },
             ].map((feature, index) => (
               <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: isMobile ? "100%" : "48%", color: "text.primary" }}>
-                <MotionPaper
-                  initial={{ opacity: 20, y: 20 }}
+                <MotionCard
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   elevation={0}
                   sx={{
-                    p: 4,
                     height: "100%",
-                    bgcolor: "background.light",
                     borderRadius: 4,
+                    overflow: "hidden",
                     transition: "transform 0.3s, box-shadow 0.3s",
                     "&:hover": {
                       transform: "translateY(-8px)",
@@ -276,17 +463,30 @@ export default function Home() {
                     },
                   }}
                 >
-                  <Box sx={{ mb: 2 }}>{feature.icon}</Box>
-                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                    {feature.title}
-                  </Typography>
-                  <Typography variant="body1" sx={{ color: "text.secondary" }}>
-                    {feature.description}
-                  </Typography>
-                </MotionPaper>
+                  <Box
+                    sx={{
+                      p: 3,
+                      background: feature.color,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {feature.icon}
+                  </Box>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                      {feature.title}
+                    </Typography>
+                    <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </MotionCard>
               </Grid>
             ))}
           </Grid>
+
         </Container>
       </Box>
 
@@ -430,8 +630,8 @@ export default function Home() {
                   </Typography>
                 </Box>
                 <Typography variant="body1" sx={{ color: "text.secondary", mb: 3, flex: 1 }}>
-                  Create AI-generated flashcards from your study material. Perfect for memorization and quick review. Our
-                  flashcards use active recall to help you remember information more effectively.
+                  Create AI-generated flashcards from your study material. Perfect for memorization and quick review.
+                  Our flashcards use active recall to help you remember information more effectively.
                 </Typography>
                 <Button
                   variant="contained"

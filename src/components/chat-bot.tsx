@@ -23,7 +23,7 @@ import {
   Psychology as PsychologyIcon,
   Person as PersonIcon,
 } from "@mui/icons-material"
-import User from "../models/user.model"
+import type User from "../models/user.model"
 
 interface Message {
   id: string

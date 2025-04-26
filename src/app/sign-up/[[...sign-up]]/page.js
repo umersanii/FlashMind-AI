@@ -1,14 +1,7 @@
-"use client";
+"use client"
 
-import { SignUp } from "@clerk/clerk-react";
-import {
-  AppBar,
-  Button,
-  Container,
-  Toolbar,
-  Typography,
-  Box,
-} from "@mui/material";
+import { SignUp } from "@clerk/clerk-react"
+import { AppBar, Button, Container, Toolbar, Typography, Box } from "@mui/material"
 
 export default function SignUpPage() {
   return (
@@ -18,7 +11,7 @@ export default function SignUpPage() {
         sx={{ borderRadius: 2, boxShadow: "none" }} // Rounded AppBar, No Shadow
       >
         <Toolbar>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
             <Button
               variant="contained"
               color="primary"
@@ -50,5 +43,5 @@ export default function SignUpPage() {
         </Box>
       </Container>
     </>
-  );
+  )
 }

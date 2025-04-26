@@ -84,7 +84,7 @@ export default function Flashcard() {
   const search = searchParams.get("id")
 
   const myUser = isPreviewMode ? { generateFlashcardSet: mockGenerateFlashcards } : new User(user || {})
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isLoaded) {
@@ -125,6 +125,24 @@ export default function Flashcard() {
       getFlashcard()
     }
   }, [search, user, isLoaded, isSignedIn, isPreviewMode])
+
+  useEffect(() => {
+    const updateUserStreak = async () => {
+      if (isLoaded && isSignedIn && user && !isPreviewMode && flashcards.length > 0) {
+        try {
+          const userModel = new User(user)
+          await userModel.updateStreak()
+        } catch (error) {
+          console.error("Error updating streak:", error)
+        }
+      }
+    }
+
+    // Update streak when flashcards are loaded
+    if (flashcards.length > 0 && !loading) {
+      updateUserStreak()
+    }
+  }, [flashcards, isLoaded, isSignedIn, user, isPreviewMode, loading])
 
   useEffect(() => {
     if (showBookmarkedOnly) {
@@ -352,7 +370,6 @@ export default function Flashcard() {
           pb: 8,
           px: fullscreen ? 2 : undefined,
         }}
-      
       >
         {loading ? (
           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "50vh" }}>
@@ -874,7 +891,7 @@ export default function Flashcard() {
       </Zoom>
 
       {/* Study Assistant Chat Bot */}
-      <ChatBot context={{ collectionName }} user={myUser}/>
+      <ChatBot context={{ collectionName }} user={myUser} />
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>

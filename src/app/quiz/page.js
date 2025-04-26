@@ -150,6 +150,24 @@ export default function Quiz() {
     }
   }, [search, user, isLoaded, isSignedIn, isPreviewMode])
 
+  useEffect(() => {
+    const updateUserStreak = async () => {
+      if (isLoaded && isSignedIn && user && !isPreviewMode && quizQuestions.length > 0) {
+        try {
+          const userModel = new User(user)
+          await userModel.updateStreak()
+        } catch (error) {
+          console.error("Error updating streak:", error)
+        }
+      }
+    }
+
+    // Update streak when quiz questions are loaded
+    if (quizQuestions.length > 0 && !loading) {
+      updateUserStreak()
+    }
+  }, [quizQuestions, isLoaded, isSignedIn, user, isPreviewMode, loading])
+
   const handleAnswerSelect = (questionIndex, answerIndex) => {
     setUserAnswers({
       ...userAnswers,

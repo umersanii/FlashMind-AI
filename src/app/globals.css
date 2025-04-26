@@ -1,25 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 
 :root {
   /* Primary colors */
   --primary-main: #6366f1;
   --primary-light: #818cf8;
   --primary-dark: #4f46e5;
-  
+
   /* Secondary colors */
   --secondary-main: #ec4899;
   --secondary-light: #f472b6;
   --secondary-dark: #db2777;
-  
+
   /* Background colors */
   --background-default: #f9fafb;
   --background-paper: #ffffff;
-  
+
   /* Text colors */
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-disabled: #9ca3af;
-  
+
   /* Border radius */
   --border-radius: 12px;
 
@@ -29,7 +29,7 @@
   --random-color-3: #60a5fa;
   --random-color-4: #f472b6;
   --random-color-5: #a78bfa;
-  
+
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -46,7 +46,8 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+    "Helvetica Neue", sans-serif;
   background-color: var(--background-default);
   color: var(--text-primary);
 }
@@ -131,7 +132,8 @@ a {
   transform: rotateY(180deg);
 }
 
-.flashcard-front, .flashcard-back {
+.flashcard-front,
+.flashcard-back {
   position: absolute;
   width: 100%;
   height: 100%;
@@ -175,8 +177,12 @@ a {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .grow-in {
@@ -184,11 +190,11 @@ a {
 }
 
 @keyframes growIn {
-  from { 
+  from {
     opacity: 0;
     transform: scale(0.9);
   }
-  to { 
+  to {
     opacity: 1;
     transform: scale(1);
   }
