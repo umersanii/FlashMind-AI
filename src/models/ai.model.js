@@ -1,11 +1,12 @@
 import { POST } from "../api/llm_api.js"
 
 class AImodel {
-  async genrateFlashcardSet(text, difficulty = 2, numQuestions = 10) {
+  async genrateFlashcardSet(text, difficulty = 2, numQuestions = 10, language = "en") {
     const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
+    const languagePrompt = language === "ur" ? "in Urdu language" : "in English language"
 
     const systemPrompt = `
-    You are an intelligent flashcard generator for a SaaS platform. Your task is to create concise, informative, and effective flashcards based on user input. 
+    You are an intelligent flashcard generator for a SaaS platform. Your task is to create concise, informative, and effective flashcards based on user input ${languagePrompt}.
     
     Create exactly ${numQuestions} flashcards with a difficulty level of ${difficultyLevel}.
     
@@ -15,6 +16,8 @@ class AImodel {
     - hard: Create questions that require application of knowledge, analysis, or evaluation
     
     Each flashcard should include a question or term on the front and a clear, detailed answer or explanation on the back. Ensure that the content is accurate, educational, and appropriate for the target audience, which may vary from students to professionals.
+    
+    ${language === "ur" ? "Make sure all content is written in Urdu language using proper Urdu script." : ""}
     
     return in the following JSON format 
     {
@@ -36,11 +39,12 @@ class AImodel {
     return flashcards
   }
 
-  async generateQuiz(text, difficulty = 2, numQuestions = 5) {
+  async generateQuiz(text, difficulty = 2, numQuestions = 5, language = "en") {
     const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
+    const languagePrompt = language === "ur" ? "in Urdu language" : "in English language"
 
     const systemPrompt = `
-    You are an intelligent quiz generator for a SaaS platform. Your task is to create concise, informative, and effective multiple-choice quiz questions based on user input. 
+    You are an intelligent quiz generator for a SaaS platform. Your task is to create concise, informative, and effective multiple-choice quiz questions based on user input ${languagePrompt}.
     
     Create exactly ${numQuestions} quiz questions with a difficulty level of ${difficultyLevel}.
     
@@ -53,6 +57,8 @@ class AImodel {
     1. A clear question
     2. Four possible answer options
     3. The index of the correct answer (0-3)
+    
+    ${language === "ur" ? "Make sure all content is written in Urdu language using proper Urdu script." : ""}
     
     Ensure that the content is accurate, educational, and appropriate for the target audience, which may vary from students to professionals.
     

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef, useMemo } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useUser } from "@clerk/nextjs"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -48,12 +48,12 @@ import {
 import { motion, AnimatePresence } from "framer-motion"
 import Navbar from "../../components/ui/navbar"
 import ChatBot from "../../components/chat-bot"
+import DownloadFlashcards from "../../components/download-flashcards"
 
 import User from "../../models/user.model"
 
 const MotionBox = motion(Box)
 const MotionPaper = motion(Paper)
-
 
 export default function Flashcard() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -91,7 +91,7 @@ export default function Flashcard() {
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [isLoaded, search])
+  }, [isLoaded, search, user])
 
   useEffect(() => {
     async function getFlashcard() {
@@ -466,6 +466,7 @@ export default function Flashcard() {
                       <RefreshIcon />
                     </IconButton>
                   </Tooltip>
+                  <DownloadFlashcards flashcards={filteredCards} collectionName={collectionName} />
                 </Box>
               </Box>
             )}

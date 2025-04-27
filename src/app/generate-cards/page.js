@@ -49,6 +49,7 @@ import User from "../../models/user.model"
 import Navbar from "../../components/ui/navbar"
 import FileUpload from "../../components/file-upload"
 import AudioRecorder from "../../components/audio-recorder"
+import DownloadFlashcards from "../../components/download-flashcards"
 
 export default function GenerateCards() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -69,7 +70,15 @@ export default function GenerateCards() {
   const [currentCardIndex, setCurrentCardIndex] = useState(0)
   const [viewMode, setViewMode] = useState(0)
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
+  const [language, setLanguage] = useState("en") // Default to English
 
+  useEffect(() => {
+    // Load preferred language from localStorage
+    const savedLanguage = localStorage.getItem("preferredLanguage")
+    if (savedLanguage) {
+      setLanguage(savedLanguage)
+    }
+  }, [])
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -124,6 +133,14 @@ export default function GenerateCards() {
       setCollectionsLoaded(true)
     }
 
+    if (isLoaded) {
+      if (isSignedIn) {
+        fetchCollections()
+      } else {
+        setCollectionsLoaded(true)
+      }
+    }
+
     return () => {
       isMounted = false
     }
@@ -143,7 +160,7 @@ export default function GenerateCards() {
       setIsGenerating(true)
       console.log("Generating flashcards...")
 
-      const deck = await myUser.generateFlashcardSet(text, difficulty, numQuestions)
+      const deck = await myUser.generateFlashcardSet(text, difficulty, numQuestions, language)
 
       if (!deck || !deck.flashcards) {
         console.error("Invalid deck format:", deck)
@@ -228,6 +245,12 @@ export default function GenerateCards() {
     setCurrentCardIndex(page - 1)
   }
 
+  const handleLanguageChange = (event) => {
+    const newLanguage = event.target.value
+    setLanguage(newLanguage)
+    localStorage.setItem("preferredLanguage", newLanguage)
+  }
+
   const getDifficultyLabel = (value) => {
     switch (value) {
       case 1:
@@ -240,7 +263,6 @@ export default function GenerateCards() {
         return "Medium"
     }
   }
-
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>
@@ -407,6 +429,18 @@ export default function GenerateCards() {
                   </FormControl>
                 </Box>
 
+                <Box sx={{ mb: 4 }}>
+                  <Typography gutterBottom sx={{ color: "text.secondary", fontWeight: 500 }}>
+                    Language
+                  </Typography>
+                  <FormControl fullWidth variant="outlined" size="small">
+                    <Select value={language} onChange={handleLanguageChange}>
+                      <MenuItem value="en">English</MenuItem>
+                      <MenuItem value="ur">Urdu</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
                 <Button
                   variant="contained"
                   color="primary"
@@ -449,11 +483,14 @@ export default function GenerateCards() {
                 <Typography variant="h5" component="h2" sx={{ fontWeight: 600 }}>
                   Your Flashcards
                 </Typography>
-                <Box>
-                  <Tabs value={viewMode} onChange={handleViewModeChange} aria-label="view mode tabs">
-                    <Tab label="Card View" />
-                    <Tab label="Grid View" />
-                  </Tabs>
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <DownloadFlashcards flashcards={flashcards} collectionName={name || "Flashcards"} />
+                  <Box>
+                    <Tabs value={viewMode} onChange={handleViewModeChange} aria-label="view mode tabs">
+                      <Tab label="Card View" />
+                      <Tab label="Grid View" />
+                    </Tabs>
+                  </Box>
                 </Box>
               </Box>
 
@@ -516,6 +553,7 @@ export default function GenerateCards() {
                               backgroundColor: "primary.main",
                               color: "primary.contrastText",
                               boxShadow: theme.shadows[10],
+                              ...(language === "ur" && { direction: "rtl" }),
                             }}
                           >
                             <Typography
@@ -523,6 +561,7 @@ export default function GenerateCards() {
                               sx={{
                                 textAlign: "center",
                                 fontWeight: 500,
+                                ...(language === "ur" && { fontFamily: "Noto Nastaliq Urdu, serif" }),
                               }}
                             >
                               {flashcards[currentCardIndex]?.front || ""}
@@ -549,12 +588,14 @@ export default function GenerateCards() {
                               border: "1px solid",
                               borderColor: "divider",
                               boxShadow: theme.shadows[10],
+                              ...(language === "ur" && { direction: "rtl" }),
                             }}
                           >
                             <Typography
                               variant="body1"
                               sx={{
                                 textAlign: "center",
+                                ...(language === "ur" && { fontFamily: "Noto Nastaliq Urdu, serif" }),
                               }}
                             >
                               {flashcards[currentCardIndex]?.back || ""}
@@ -639,6 +680,7 @@ export default function GenerateCards() {
                                 backgroundColor: "primary.main",
                                 color: "primary.contrastText",
                                 boxShadow: theme.shadows[5],
+                                ...(language === "ur" && { direction: "rtl" }),
                               }}
                             >
                               <Typography
@@ -647,6 +689,7 @@ export default function GenerateCards() {
                                   textAlign: "center",
                                   fontWeight: 500,
                                   fontSize: "0.95rem",
+                                  ...(language === "ur" && { fontFamily: "Noto Nastaliq Urdu, serif" }),
                                 }}
                               >
                                 {flashcard.front}
@@ -670,12 +713,14 @@ export default function GenerateCards() {
                                 border: "1px solid",
                                 borderColor: "divider",
                                 boxShadow: theme.shadows[5],
+                                ...(language === "ur" && { direction: "rtl" }),
                               }}
                             >
                               <Typography
                                 variant="body2"
                                 sx={{
                                   textAlign: "center",
+                                  ...(language === "ur" && { fontFamily: "Noto Nastaliq Urdu, serif" }),
                                 }}
                               >
                                 {flashcard.back}

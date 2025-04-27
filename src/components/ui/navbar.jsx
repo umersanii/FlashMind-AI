@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useContext } from "react"
 import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import {
@@ -18,6 +18,7 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  Tooltip,
 } from "@mui/material"
 import {
   Lightbulb as LightbulbIcon,
@@ -26,15 +27,21 @@ import {
   ViewModule as ViewModuleIcon,
   Psychology as PsychologyIcon,
   Quiz as QuizIcon,
+  DarkMode as DarkModeIcon,
+  LightMode as LightModeIcon,
+  Translate as TranslateIcon,
 } from "@mui/icons-material"
 import { UserButton } from "@clerk/nextjs"
+import { ColorModeContext } from "../../app/theme"
 
 export default function Navbar() {
   const { isLoaded, isSignedIn } = useUser()
   const router = useRouter()
   const theme = useTheme()
+  const colorMode = useContext(ColorModeContext)
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [language, setLanguage] = useState("en") // Default language is English
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen)
@@ -43,6 +50,12 @@ export default function Navbar() {
   const handleNavigation = (path) => {
     router.push(path)
     if (drawerOpen) setDrawerOpen(false)
+  }
+
+  const toggleLanguage = () => {
+    const newLanguage = language === "en" ? "ur" : "en"
+    setLanguage(newLanguage)
+    localStorage.setItem("preferredLanguage", newLanguage)
   }
 
   const drawer = (
@@ -93,6 +106,25 @@ export default function Navbar() {
           </>
         )}
       </List>
+      <Divider sx={{ bgcolor: "divider" }} />
+      <List>
+        <ListItem button onClick={colorMode.toggleColorMode}>
+          <ListItemIcon>
+            {theme.palette.mode === "dark" ? (
+              <LightModeIcon sx={{ color: "primary.main" }} />
+            ) : (
+              <DarkModeIcon sx={{ color: "primary.main" }} />
+            )}
+          </ListItemIcon>
+          <ListItemText primary={theme.palette.mode === "dark" ? "Light Mode" : "Dark Mode"} />
+        </ListItem>
+        <ListItem button onClick={toggleLanguage}>
+          <ListItemIcon>
+            <TranslateIcon sx={{ color: "primary.main" }} />
+          </ListItemIcon>
+          <ListItemText primary={language === "en" ? "Switch to Urdu" : "Switch to English"} />
+        </ListItem>
+      </List>
       {!isSignedIn && (
         <>
           <Divider sx={{ bgcolor: "divider" }} />
@@ -125,7 +157,7 @@ export default function Navbar() {
             </IconButton>
           )}
           <Box sx={{ display: "flex", alignItems: "center", cursor: "pointer" }} onClick={() => handleNavigation("/")}>
-            <LightbulbIcon sx={{ color: "background-default", mr: 1, fontSize: 28 }} />
+            <LightbulbIcon sx={{ color: theme.palette.mode === "dark" ? "#fff" : "#000", mr: 1, fontSize: 28 }} />
             <Typography
               variant="h6"
               sx={{
@@ -159,6 +191,20 @@ export default function Navbar() {
           )}
 
           <Box sx={{ flexGrow: 1 }} />
+
+          {/* Theme Toggle Button */}
+          <Tooltip title={theme.palette.mode === "dark" ? "Light Mode" : "Dark Mode"}>
+            <IconButton onClick={colorMode.toggleColorMode} color="inherit" sx={{ mr: 1 }}>
+              {theme.palette.mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+            </IconButton>
+          </Tooltip>
+
+          {/* Language Toggle Button */}
+          <Tooltip title={language === "en" ? "Switch to Urdu" : "Switch to English"}>
+            <IconButton onClick={toggleLanguage} color="inherit" sx={{ mr: 1 }}>
+              <TranslateIcon />
+            </IconButton>
+          </Tooltip>
 
           {isLoaded && isSignedIn ? (
             <UserButton afterSignOutUrl="/" />

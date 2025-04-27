@@ -92,8 +92,8 @@ export default function Home() {
         }}
       >
         <Container maxWidth="xl">
-          <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"}>
-            <Grid item xs={12} md={6} width={isMobile ? "100%" : "60%"}>
+          <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"} padding={{ xs: 2, md: 16 }}>
+            <Grid item xs={12} md={6} width={isMobile ? "100%" : "60%"} >
               <MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
                 <MotionTypography
                   variant="h2"
@@ -161,7 +161,7 @@ export default function Home() {
                     zIndex: 3,
                   }}
                 >
-                  <Typography variant="h6" sx={{ fontWeight: 600, textAlign: "center", color: "#fff" }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, textAlign: "center", color: "primary.dark" }}>
                     What is the capital of France?
                   </Typography>
                 </Box>
@@ -402,10 +402,10 @@ export default function Home() {
             Why FlashMind?
           </MotionTypography>
 
-          <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"}>
+          <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"} >
           {[
               {
-                icon: <LightbulbIcon sx={{ fontSize: 40, color: "#fff" }} />,
+                icon: <LightbulbIcon sx={{ fontSize: 40, color: "#fff" }}/>,
                 title: "AI-Powered Generation",
                 description:
                   "Our advanced AI analyzes your content and creates perfect question-answer pairs tailored to your learning needs.",

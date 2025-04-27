@@ -23,19 +23,25 @@ import {
   Paper,
   CircularProgress,
   useTheme,
+  Tabs,
+  Tab,
+  Chip,
+  Divider,
 } from "@mui/material"
 import {
   Add as AddIcon,
   Search as SearchIcon,
   Close as CloseIcon,
-  NavigateNext as NavigateNextIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
   AutoAwesome as AutoAwesomeIcon,
   Collections as CollectionsIcon,
+  Quiz as QuizIcon,
+  School as SchoolIcon,
 } from "@mui/icons-material"
 import Navbar from "../../components/ui/navbar"
 import User from "../../models/user.model"
+import DownloadFlashcards from "../../components/download-flashcards"
 
 const getRandomGradient = () => {
   const gradients = [
@@ -48,8 +54,6 @@ const getRandomGradient = () => {
   ]
   return gradients[Math.floor(Math.random() * gradients.length)]
 }
-
-// Sample data for preview mode
 
 export default function Flashcards() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -71,17 +75,35 @@ export default function Flashcards() {
   const [selectedFlashcardIndex, setSelectedFlashcardIndex] = useState(null)
   const [actionType, setActionType] = useState("")
   const [loading, setLoading] = useState(true)
+  const [tabValue, setTabValue] = useState(0)
   const router = useRouter()
   const theme = useTheme()
   const [collectionsLoaded, setCollectionsLoaded] = useState(false)
 
-  const filteredFlashcardSets = (flashcardSets || []).filter((set) =>
-    set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    set.flashcards.some((card) =>
-      card.front.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      card.back.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue)
+  }
+
+  const isQuizSet = (set) => {
+    if (set.isQuiz) return true
+
+    return set.flashcards.some((card) => card.back && (card.back.includes("Options:") || card.back.includes("Answer:")))
+  }
+
+  const filteredFlashcardSets = (flashcardSets || []).filter(
+    (set) =>
+      set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      set.flashcards.some(
+        (card) =>
+          card.front.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          card.back.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+  )
+
+  const quizSets = filteredFlashcardSets.filter((set) => isQuizSet(set))
+  const regularSets = filteredFlashcardSets.filter((set) => !isQuizSet(set))
+
+  const displaySets = tabValue === 0 ? filteredFlashcardSets : tabValue === 1 ? regularSets : quizSets
 
   const myUser = new User(user)
 
@@ -119,11 +141,6 @@ export default function Flashcards() {
     }
   }
 
-  const isQuizSet = (set) => {
-    if (set.isQuiz) return true
-
-    return set.flashcards.some((card) => card.back && (card.back.includes("Options:") || card.back.includes("Answer:")))
-  }
 
   const handleFlip = (index) => {
     setFlipped((prev) => ({ ...prev, [index]: !prev[index] }))
@@ -279,8 +296,6 @@ export default function Flashcards() {
     router.push("/generate-cards")
   }
 
-
-
   if (!isLoaded || !isSignedIn) {
     return (
       <Box
@@ -306,11 +321,11 @@ export default function Flashcards() {
           <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
             <CollectionsIcon sx={{ mr: 1, color: "primary.main" }} />
             <Typography variant="h4" component="h1" sx={{ fontWeight: 700 }}>
-              My Flashcard Collections
+              My Library
             </Typography>
           </Box>
           <Typography variant="body1" sx={{ color: "text.secondary" }}>
-            Manage your flashcard collections or create new ones
+            Manage your flashcard collections and quizzes
           </Typography>
         </Box>
 
@@ -364,7 +379,6 @@ export default function Flashcards() {
                 onClick={handleOpenAddCollectionDialog}
                 sx={{
                   height: 48,
-                  // minWidth: { xs: "100%", sm: "auto" },
                   flex: { xs: 1, sm: "none" },
                   whiteSpace: "nowrap",
                 }}
@@ -377,7 +391,6 @@ export default function Flashcards() {
                 onClick={handleGeneratePageClick}
                 sx={{
                   height: 48,
-                  // minWidth: { xs: "100%", sm: "auto" },
                   flex: { xs: 1, sm: "none" },
                   whiteSpace: "nowrap",
                 }}
@@ -427,221 +440,235 @@ export default function Flashcards() {
           </Paper>
         ) : (
           <Box>
-            {filteredFlashcardSets.map((set, setIndex) => (
-              <Paper
-                key={setIndex}
-                elevation={0}
+            <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+              <Tabs
+                value={tabValue}
+                onChange={handleTabChange}
+                aria-label="flashcard categories"
                 sx={{
-                  mb: 4,
-                  borderRadius: 3,
-                  overflow: "hidden",
-                  border: "1px solid",
-                  borderColor: "divider",
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 500,
+                    fontSize: "0.95rem",
+                  },
                 }}
               >
-                <Box
-                  sx={{
-                    p: 3,
-                    background: getRandomGradient(),
-                    color: "white",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <Box>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      {set.name || `Set ${setIndex + 1}`}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
-                      {set.flashcards.length} {set.flashcards.length === 1 ? "card" : "cards"}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", gap: 1 }}>
-                    <IconButton
-                      onClick={() => handleOpenEditCollectionDialog(setIndex)}
-                      sx={{ color: "white", bgcolor: "rgba(255, 255, 255, 0.1)" }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      onClick={(e) => handleOpenConfirmationDialog("deleteCollection", setIndex, null, e)}
-                      sx={{ color: "white", bgcolor: "rgba(255, 255, 255, 0.1)" }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                </Box>
+                <Tab
+                  icon={<CollectionsIcon sx={{ mr: 1 }} />}
+                  iconPosition="start"
+                  label={`All (${filteredFlashcardSets.length})`}
+                />
+                <Tab
+                  icon={<SchoolIcon sx={{ mr: 1 }} />}
+                  iconPosition="start"
+                  label={`Flashcards (${regularSets.length})`}
+                />
+                <Tab icon={<QuizIcon sx={{ mr: 1 }} />} iconPosition="start" label={`Quizzes (${quizSets.length})`} />
+              </Tabs>
+            </Box>
 
-                {set.flashcards.length === 0 ? (
-                  <Box sx={{ p: 4, textAlign: "center" }}>
-                    <Typography variant="body1" sx={{ mb: 2, color: "text.secondary" }}>
-                      This collection is empty
-                    </Typography>
-                    <Button
-                      variant="outlined"
-                      startIcon={<AddIcon />}
-                      onClick={() => handleOpenAddFlashcardDialog(setIndex)}
-                    >
-                      Add Flashcard
-                    </Button>
-                  </Box>
-                ) : (
-                  <Box sx={{ p: 3 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-                      <Button
-                        variant="text"
-                        onClick={() => handleCardClick(set.name, isQuizSet(set))}
-                        endIcon={<NavigateNextIcon />}
-                        sx={{ color: "primary.main" }}
-                      >
-                        {isQuizSet(set) ? "Take Quiz" : "Study All Cards"}
-                      </Button>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => handleOpenAddFlashcardDialog(setIndex)}
-                      >
-                        Add Card
-                      </Button>
-                    </Box>
+            <Grid container spacing={2}>
+              {displaySets.map((set, setIndex) => {
+                const isQuiz = isQuizSet(set)
+                const actualIndex = flashcardSets.findIndex((s) => s.name === set.name)
 
-                    <Grid container spacing={2}>
-                      {set.flashcards.slice(0, 3).map((flashcard, index) => (
-                        <Grid item xs={12} sm={6} md={4} key={index}>
-                          <Card
-                            onClick={() => handleFlip(`${setIndex}-${index}`)}
+                return (
+                  <Grid item xs={12} sm={6} md={4} key={setIndex} sx={{ width: { xs: "100%", sm: "48%",md: "32%" } }}>
+                    <Card
+                      elevation={0}
+                      sx={{
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        border: "1px solid",
+                        borderColor: "divider",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        transition: "transform 0.2s, box-shadow 0.2s",
+                        "&:hover": {
+                          transform: "translateY(-4px)",
+                          boxShadow: theme.shadows[4],
+                        },
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          p: 2,
+                          background: getRandomGradient(),
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                          {isQuiz ? (
+                            <QuizIcon sx={{ mr: 1, fontSize: 20 }} />
+                          ) : (
+                            <SchoolIcon sx={{ mr: 1, fontSize: 20 }} />
+                          )}
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: "0.95rem" }}>
+                            {set.name || `Set ${setIndex + 1}`}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={`${set.flashcards.length} ${set.flashcards.length === 1 ? "card" : "cards"}`}
+                          size="small"
+                          sx={{
+                            bgcolor: "rgba(255, 255, 255, 0.2)",
+                            color: "white",
+                            fontSize: "0.7rem",
+                            height: 20,
+                          }}
+                        />
+                      </Box>
+
+                      <CardContent sx={{ p: 2, flexGrow: 1, display: "flex", flexDirection: "column"}}>
+                        {set.flashcards.length === 0 ? (
+                          <Box
                             sx={{
-                              height: 160,
-                              borderRadius: 2,
-                              perspective: "1000px",
-                              backgroundColor: "transparent",
-                              boxShadow: "none",
-                              cursor: "pointer",
-                              position: "relative",
+                              textAlign: "center",
+                              py: 2,
+                              flexGrow: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "center",
                             }}
                           >
-                            <Box
-                              sx={{
-                                position: "relative",
-                                width: "100%",
-                                height: "100%",
-                                transition: "transform 0.6s",
-                                transformStyle: "preserve-3d",
-                                transform: flipped[`${setIndex}-${index}`] ? "rotateY(180deg)" : "rotateY(0deg)",
-                              }}
+                            <Typography variant="body2" sx={{ color: "text.secondary", mb: 1 }}>
+                              This collection is empty
+                            </Typography>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              startIcon={<AddIcon />}
+                              onClick={() => handleOpenAddFlashcardDialog(actualIndex)}
                             >
-                              <CardContent
-                                sx={{
-                                  position: "absolute",
-                                  width: "100%",
-                                  height: "100%",
-                                  backfaceVisibility: "hidden",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                  p: 2,
-                                  borderRadius: 2,
-                                  backgroundColor: "background.default",
-                                  border: "1px solid",
-                                  borderColor: "divider",
-                                }}
-                              >
-                                <Typography
-                                  variant="body2"
+                              Add Card
+                            </Button>
+                          </Box>
+                        ) : (
+                          <>
+                            <Box sx={{ mb: 1, flexGrow: 1 }}>
+                              {set.flashcards.slice(0, 2).map((flashcard, index) => (
+                                <Box
+                                  key={index}
                                   sx={{
-                                    textAlign: "center",
-                                    fontWeight: 500,
+                                    p: 1.5,
+                                    mb: 1,
+                                    borderRadius: 1,
+                                    bgcolor: "background.default",
+                                    border: "1px solid",
+                                    borderColor: "divider",
+                                    fontSize: "0.85rem",
                                     overflow: "hidden",
+                                    textOverflow: "ellipsis",
                                     display: "-webkit-box",
-                                    WebkitLineClamp: 4,
+                                    WebkitLineClamp: 2,
                                     WebkitBoxOrient: "vertical",
+                                    position: "relative",
                                   }}
                                 >
                                   {flashcard.front}
-                                </Typography>
-                              </CardContent>
-                              <CardContent
-                                sx={{
-                                  position: "absolute",
-                                  width: "100%",
-                                  height: "100%",
-                                  backfaceVisibility: "hidden",
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                  p: 2,
-                                  borderRadius: 2,
-                                  backgroundColor: "background.paper",
-                                  color: "text.primary",
-                                  transform: "rotateY(180deg)",
-                                  border: "1px solid",
-                                  borderColor: "divider",
-                                }}
-                              >
+                                  <Box
+                                    sx={{
+                                      position: "absolute",
+                                      top: 2,
+                                      right: 2,
+                                      display: "flex",
+                                      opacity: 0,
+                                      transition: "opacity 0.2s",
+                                      ".MuiBox-root:hover &": { opacity: 1 },
+                                    }}
+                                  >
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => handleOpenEditFlashcardDialog(actualIndex, index, e)}
+                                      sx={{ p: 0.5 }}
+                                    >
+                                      <EditIcon fontSize="small" sx={{ fontSize: "0.85rem" }} />
+                                    </IconButton>
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) =>
+                                        handleOpenConfirmationDialog("deleteFlashcard", actualIndex, index, e)
+                                      }
+                                      sx={{ p: 0.5 }}
+                                    >
+                                      <DeleteIcon fontSize="small" sx={{ fontSize: "0.85rem" }} />
+                                    </IconButton>
+                                  </Box>
+                                </Box>
+                              ))}
+
+                              {set.flashcards.length > 2 && (
                                 <Typography
                                   variant="body2"
-                                  sx={{
-                                    textAlign: "center",
-                                    overflow: "hidden",
-                                    display: "-webkit-box",
-                                    WebkitLineClamp: 4,
-                                    WebkitBoxOrient: "vertical",
-                                  }}
+                                  sx={{ color: "text.secondary", textAlign: "center", fontSize: "0.8rem", mt: 1 }}
                                 >
-                                  {flashcard.back}
+                                  +{set.flashcards.length - 2} more cards
                                 </Typography>
-                              </CardContent>
+                              )}
                             </Box>
-                            <Box
-                              sx={{
-                                position: "absolute",
-                                top: 4,
-                                right: 4,
-                                zIndex: 10,
-                                display: "flex",
-                                gap: 0.5,
-                              }}
-                            >
-                              <IconButton
-                                size="small"
-                                onClick={(e) => handleOpenEditFlashcardDialog(setIndex, index, e)}
-                                sx={{ bgcolor: "background.paper" }}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                              <IconButton
-                                size="small"
-                                onClick={(e) => handleOpenConfirmationDialog("deleteFlashcard", setIndex, index, e)}
-                                sx={{ bgcolor: "background.paper" }}
-                              >
-                                <DeleteIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
-                          </Card>
-                        </Grid>
-                      ))}
-                    </Grid>
+                          </>
+                        )}
+                      </CardContent>
 
-                    {set.flashcards.length > 3 && (
-                      <Box sx={{ mt: 2, textAlign: "center" }}>
+                      <Divider />
+
+                      <Box sx={{ display: "flex", justifyContent: "space-between", p: 1.5 }}>
+                        <Box sx={{ display: "flex", gap: 0.5 }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenEditCollectionDialog(actualIndex)}
+                            sx={{ p: 0.5 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleOpenConfirmationDialog("deleteCollection", actualIndex, null, e)}
+                            sx={{ p: 0.5 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleOpenAddFlashcardDialog(actualIndex)}
+                            sx={{ p: 0.5 }}
+                          >
+                            <AddIcon fontSize="small" />
+                          </IconButton>
+                          <DownloadFlashcards
+                            flashcards={set.flashcards}
+                            collectionName={set.name}
+                            buttonSize="small"
+                          />
+                        </Box>
+
                         <Button
-                          variant="text"
-                          onClick={() => handleCardClick(set.name, isQuizSet(set))}
-                          endIcon={<NavigateNextIcon />}
-                          sx={{ color: "text.secondary" }}
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleCardClick(set.name, isQuiz)}
+                          sx={{
+                            px: 2,
+                            py: 0.5,
+                            minWidth: 0,
+                            fontSize: "0.75rem",
+                            bgcolor: isQuiz ? "secondary.main" : "primary.main",
+                            "&:hover": {
+                              bgcolor: isQuiz ? "secondary.dark" : "primary.dark",
+                            },
+                          }}
                         >
-                          View all {set.flashcards.length} {isQuizSet(set) ? "questions" : "cards"}
+                          {isQuiz ? "Take Quiz" : "Study"}
                         </Button>
                       </Box>
-                    )}
-                  </Box>
-                )}
-              </Paper>
-            ))}
+                    </Card>
+                  </Grid>
+                )
+              })}
+            </Grid>
           </Box>
         )}
       </Container>

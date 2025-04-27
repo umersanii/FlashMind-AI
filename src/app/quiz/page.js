@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
 import { useUser } from "@clerk/nextjs"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -35,7 +35,7 @@ import {
 import Navbar from "../../components/ui/navbar"
 import ChatBot from "../../components/chat-bot"
 import User from "../../models/user.model"
-
+import DownloadFlashcards from "../../components/download-flashcards"
 
 export default function Quiz() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -48,6 +48,7 @@ export default function Quiz() {
   const [collectionName, setCollectionName] = useState("")
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState(null)
+  const [language, setLanguage] = useState("en") // Default language
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -57,7 +58,6 @@ export default function Quiz() {
   const search = searchParams.get("id")
 
   const myUser = new User(user)
-
 
   useEffect(() => {
     async function getQuiz() {
@@ -278,6 +278,14 @@ export default function Quiz() {
                 <Button variant="outlined" startIcon={<Refresh />} onClick={resetQuiz}>
                   Reset Quiz
                 </Button>
+                <DownloadFlashcards
+                  flashcards={quizQuestions.map((q) => ({
+                    id: Math.random().toString(),
+                    front: q.question,
+                    back: `Answer: ${q.options[q.correctAnswer]}\n\nOptions:\n${q.options.join("\n")}`,
+                  }))}
+                  collectionName={collectionName}
+                />
               </Box>
             </Box>
 
@@ -390,6 +398,7 @@ export default function Quiz() {
                       border: "1px solid",
                       borderColor: "divider",
                       position: "relative",
+                      ...(language === "ur" ? { direction: "rtl" } : {}),
                     }}
                   >
                     <IconButton

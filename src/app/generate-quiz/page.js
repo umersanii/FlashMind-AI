@@ -44,6 +44,7 @@ import { ChevronLeft, ChevronRight, Save, Settings, BrainIcon as Psychology, Che
 import User from "../../models/user.model"
 import Navbar from "../../components/ui/navbar"
 import FileUpload from "../../components/file-upload"
+import DownloadFlashcards from "../../components/download-flashcards"
 
 export default function GenerateQuiz() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -66,7 +67,7 @@ export default function GenerateQuiz() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [viewMode, setViewMode] = useState(0)
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
-
+  const [language, setLanguage] = useState("en") // Default to English
 
   useEffect(() => {
     if (isLoaded && !isSignedIn) {
@@ -86,11 +87,11 @@ export default function GenerateQuiz() {
 
   useEffect(() => {
     let isMounted = true
-    let shouldFetchCollections = false
+    // let shouldFetchCollections = false;
 
-    if (isLoaded && isSignedIn) {
-      shouldFetchCollections = true
-    }
+    // if (isLoaded && isSignedIn) {
+    //   shouldFetchCollections = true;
+    // }
 
     const fetchCollections = async () => {
       try {
@@ -109,7 +110,12 @@ export default function GenerateQuiz() {
       }
     }
 
-    if (shouldFetchCollections) {
+    // if (shouldFetchCollections) {
+    //   fetchCollections();
+    // } else {
+    //   setCollectionsLoaded(true);
+    // }
+    if (isLoaded && isSignedIn) {
       fetchCollections()
     } else {
       setCollectionsLoaded(true)
@@ -119,6 +125,14 @@ export default function GenerateQuiz() {
       isMounted = false
     }
   }, [isLoaded, isSignedIn, user])
+
+  useEffect(() => {
+    // Load preferred language from localStorage
+    const savedLanguage = localStorage.getItem("preferredLanguage")
+    if (savedLanguage) {
+      setLanguage(savedLanguage)
+    }
+  }, [])
 
   const handleTextExtracted = (extractedText) => {
     setText(extractedText)
@@ -134,8 +148,8 @@ export default function GenerateQuiz() {
       setIsGenerating(true)
       console.log("Generating quiz questions...")
 
-      // Pass difficulty and numQuestions to the API
-      const quiz = await myUser.generateQuiz(text, difficulty, numQuestions)
+      // Pass language to the API
+      const quiz = await myUser.generateQuiz(text, difficulty, numQuestions, language)
 
       if (!quiz || !quiz.questions) {
         console.error("Invalid quiz format:", quiz)
@@ -411,6 +425,24 @@ export default function GenerateQuiz() {
                 </Typography>
 
                 <Box sx={{ mb: 4 }}>
+                  <Typography gutterBottom sx={{ color: "text.secondary", fontWeight: 500 }}>
+                    Language
+                  </Typography>
+                  <FormControl fullWidth variant="outlined" size="small">
+                    <Select
+                      value={language}
+                      onChange={(e) => {
+                        setLanguage(e.target.value)
+                        localStorage.setItem("preferredLanguage", e.target.value)
+                      }}
+                    >
+                      <MenuItem value="en">English</MenuItem>
+                      <MenuItem value="ur">Urdu</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+
+                <Box sx={{ mb: 4 }}>
                   <Typography id="difficulty-slider" gutterBottom sx={{ color: "text.secondary", fontWeight: 500 }}>
                     Difficulty Level:{" "}
                     <Chip
@@ -527,6 +559,14 @@ export default function GenerateQuiz() {
                     <Button variant="contained" onClick={handleOpenDialog}>
                       Save Quiz
                     </Button>
+                    <DownloadFlashcards
+                      flashcards={quizQuestions.map((q) => ({
+                        id: Math.random().toString(),
+                        front: q.question,
+                        back: `Answer: ${q.options[q.correctAnswer]}\n\nOptions:\n${q.options.join("\n")}`,
+                      }))}
+                      collectionName={name || "Quiz"}
+                    />
                   </Box>
 
                   <Box sx={{ mt: 4 }}>
@@ -613,7 +653,7 @@ export default function GenerateQuiz() {
                           borderColor: "divider",
                         }}
                       >
-                        <CardContent sx={{ p: 4 }}>
+                        <CardContent sx={{ p: 4, ...(language === "ur" && { direction: "rtl" }) }}>
                           <Typography variant="subtitle1" sx={{ mb: 1, color: "text.secondary" }}>
                             Question {currentQuestionIndex + 1} of {quizQuestions.length}
                           </Typography>
