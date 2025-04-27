@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useUser } from "@clerk/clerk-react"
-import { collection, doc, setDoc, updateDoc, getDoc } from "firebase/firestore"
-import { db } from "../../utils/firebase"
 import { useRouter } from "next/navigation"
 import {
   Container,
@@ -37,6 +35,7 @@ import {
   Collections as CollectionsIcon,
 } from "@mui/icons-material"
 import Navbar from "../../components/ui/navbar"
+import User from "../../models/user.model"
 
 const getRandomGradient = () => {
   const gradients = [
@@ -72,54 +71,45 @@ export default function Flashcards() {
   const [selectedFlashcardIndex, setSelectedFlashcardIndex] = useState(null)
   const [actionType, setActionType] = useState("")
   const [loading, setLoading] = useState(true)
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const router = useRouter()
   const theme = useTheme()
+  const [collectionsLoaded, setCollectionsLoaded] = useState(false)
 
-  // Check if we're in preview mode
+  const filteredFlashcardSets = (flashcardSets || []).filter((set) =>
+    set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    set.flashcards.some((card) =>
+      card.front.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      card.back.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  );
+
+  const myUser = new User(user)
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        setIsPreviewMode(true)
-        setLoading(false)
-      }
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [isLoaded])
-
-  useEffect(() => {
-    if (isLoaded && !isSignedIn && !isPreviewMode) {
+    if (isLoaded && !isSignedIn) {
       router.push("/")
     }
-  }, [isLoaded, isSignedIn, router, isPreviewMode])
+  }, [isLoaded, isSignedIn, router])
 
   useEffect(() => {
-    if (user && !isPreviewMode) {
-      const fetchFlashcards = async () => {
-        try {
-          setLoading(true)
-          const userDocRef = doc(collection(db, "users"), user.id)
-          const docSnap = await getDoc(userDocRef)
-
-          if (docSnap.exists()) {
-            const flashcardSets = docSnap.data().flashcardSets || []
-            setFlashcardSets(flashcardSets)
-          } else {
-            await setDoc(userDocRef, { flashcardSets: [] })
-            setFlashcardSets([])
-          }
-        } catch (error) {
-          console.error("Error fetching flashcards:", error)
-          setError("Failed to load flashcards.")
-        } finally {
-          setLoading(false)
-        }
-      }
-
-      fetchFlashcards()
+    if (user && !collectionsLoaded) {
+      fetchCollections()
     }
-  }, [user, isPreviewMode])
+  }, [user])
+
+  const fetchCollections = async () => {
+    try {
+      setLoading(true)
+      const flashcardSets = await myUser.getFlashcardSets()
+      setFlashcardSets(flashcardSets)
+    } catch (error) {
+      console.error("Error fetching collections:", error)
+      setError("Failed to load flashcards.")
+    } finally {
+      setCollectionsLoaded(true)
+      setLoading(false)
+    }
+  }
 
   const handleCardClick = (id, isQuiz = false) => {
     if (isQuiz) {
@@ -130,10 +120,8 @@ export default function Flashcards() {
   }
 
   const isQuizSet = (set) => {
-    // Check if the set has the isQuiz property
     if (set.isQuiz) return true
 
-    // Fallback check: look for quiz-like content in flashcards
     return set.flashcards.some((card) => card.back && (card.back.includes("Options:") || card.back.includes("Answer:")))
   }
 
@@ -152,29 +140,15 @@ export default function Flashcards() {
   }
 
   const handleAddFlashcard = async () => {
-    if (isPreviewMode) {
-      const updatedSets = [...flashcardSets]
-      updatedSets[selectedSetIndex].flashcards.push({
-        id: Date.now().toString(),
-        ...newFlashcard,
-      })
-      setFlashcardSets(updatedSets)
-      setSuccess("Flashcard added successfully (Preview Mode).")
-      handleCloseAddFlashcardDialog()
-      return
-    }
-
     if (!newFlashcard.front || !newFlashcard.back) {
       setError("Please fill in both fields.")
       return
     }
     try {
-      const setRef = doc(db, "users", user.id)
-      const docSnap = await getDoc(setRef)
-      const flashcardSets = docSnap.data().flashcardSets || []
-      flashcardSets[selectedSetIndex].flashcards.push(newFlashcard)
-      await updateDoc(setRef, { flashcardSets })
-      setFlashcardSets(flashcardSets)
+      const selectedSet = flashcardSets[selectedSetIndex]
+
+      const updatedSets = await myUser.addFlashcard(selectedSet.name, newFlashcard)
+      setFlashcardSets(updatedSets)
       setSuccess("Flashcard added successfully.")
       handleCloseAddFlashcardDialog()
     } catch (error) {
@@ -198,12 +172,8 @@ export default function Flashcards() {
       return
     }
     try {
-      const setRef = doc(db, "users", user.id)
-      const docSnap = await getDoc(setRef)
-      const flashcardSets = docSnap.data().flashcardSets || []
-      flashcardSets.push({ name: newCollectionName, flashcards: [] })
-      await updateDoc(setRef, { flashcardSets })
-      setFlashcardSets(flashcardSets)
+      const updatedSets = await myUser.addCollection(newCollectionName)
+      setFlashcardSets(updatedSets)
       setSuccess("Collection added successfully.")
       handleCloseAddCollectionDialog()
     } catch (error) {
@@ -232,21 +202,8 @@ export default function Flashcards() {
     }
 
     try {
-      if (isPreviewMode) {
-        const updatedSets = [...flashcardSets]
-        updatedSets[selectedSetIndex].flashcards[selectedFlashcardIndex] = editFlashcard
-        setFlashcardSets(updatedSets)
-        setSuccess("Flashcard updated successfully (Preview Mode).")
-        handleCloseEditFlashcardDialog()
-        return
-      }
-
-      const setRef = doc(db, "users", user.id)
-      const docSnap = await getDoc(setRef)
-      const flashcardSets = docSnap.data().flashcardSets || []
-      flashcardSets[selectedSetIndex].flashcards[selectedFlashcardIndex] = editFlashcard
-      await updateDoc(setRef, { flashcardSets })
-      setFlashcardSets(flashcardSets)
+      const updatedSets = await myUser.updateFlashcard(selectedSetIndex, selectedFlashcardIndex, editFlashcard)
+      setFlashcardSets(updatedSets)
       setSuccess("Flashcard updated successfully.")
       handleCloseEditFlashcardDialog()
     } catch (error) {
@@ -268,12 +225,8 @@ export default function Flashcards() {
 
   const handleEditCollection = async () => {
     try {
-      const setRef = doc(db, "users", user.id)
-      const docSnap = await getDoc(setRef)
-      const flashcardSets = docSnap.data().flashcardSets || []
-      flashcardSets[selectedSetIndex].name = editCollectionName
-      await updateDoc(setRef, { flashcardSets })
-      setFlashcardSets(flashcardSets)
+      const updatedSets = await myUser.updateCollection(selectedSetIndex, editCollectionName)
+      setFlashcardSets(updatedSets)
       setSuccess("Collection updated successfully.")
       handleCloseEditCollectionDialog()
     } catch (error) {
@@ -284,12 +237,8 @@ export default function Flashcards() {
 
   const handleDeleteFlashcard = async () => {
     try {
-      const setRef = doc(db, "users", user.id)
-      const docSnap = await getDoc(setRef)
-      const flashcardSets = docSnap.data().flashcardSets || []
-      flashcardSets[selectedSetIndex].flashcards.splice(selectedFlashcardIndex, 1)
-      await updateDoc(setRef, { flashcardSets })
-      setFlashcardSets(flashcardSets)
+      const updatedSets = await myUser.deleteFlashcard(selectedSetIndex, selectedFlashcardIndex)
+      setFlashcardSets(updatedSets)
       setSuccess("Flashcard deleted successfully.")
       handleCloseConfirmationDialog()
     } catch (error) {
@@ -300,12 +249,8 @@ export default function Flashcards() {
 
   const handleDeleteCollection = async () => {
     try {
-      const setRef = doc(db, "users", user.id)
-      const docSnap = await getDoc(setRef)
-      const flashcardSets = docSnap.data().flashcardSets || []
-      flashcardSets.splice(selectedSetIndex, 1)
-      await updateDoc(setRef, { flashcardSets })
-      setFlashcardSets(flashcardSets)
+      const updatedSets = await myUser.deleteCollection(selectedSetIndex)
+      setFlashcardSets(updatedSets)
       setSuccess("Collection deleted successfully.")
       handleCloseConfirmationDialog()
     } catch (error) {
@@ -334,15 +279,7 @@ export default function Flashcards() {
     router.push("/generate-cards")
   }
 
-  const filteredFlashcardSets = flashcardSets.filter(
-    (set) =>
-      set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      set.flashcards.some(
-        (flashcard) =>
-          flashcard.front.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          flashcard.back.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-  )
+
 
   if (!isLoaded || !isSignedIn) {
     return (

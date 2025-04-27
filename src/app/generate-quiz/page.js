@@ -4,7 +4,7 @@ import { useUser } from "@clerk/clerk-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { db } from "../../utils/firebase"
-import { writeBatch, getDoc, collection, doc } from "firebase/firestore"
+import { getDoc, collection, doc } from "firebase/firestore"
 import {
   Container,
   TextField,
@@ -57,7 +57,6 @@ export default function GenerateQuiz() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [collectionsLoaded, setCollectionsLoaded] = useState(false)
   const theme = useTheme()
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [userAnswers, setUserAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
@@ -68,23 +67,14 @@ export default function GenerateQuiz() {
   const [viewMode, setViewMode] = useState(0)
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        setIsPreviewMode(true)
-      }
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [isLoaded])
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn && !isPreviewMode) {
+    if (isLoaded && !isSignedIn) {
       router.push("/")
     }
-  }, [isLoaded, isSignedIn, router, isPreviewMode])
+  }, [isLoaded, isSignedIn, router])
 
-  if (!isLoaded && !isPreviewMode) {
+  if (!isLoaded) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <CircularProgress />
@@ -92,10 +82,16 @@ export default function GenerateQuiz() {
     )
   }
 
-  const myUser = isPreviewMode ? { generateQuiz: mockGenerateQuiz } : new User(user || {})
+  const myUser = new User(user || {})
 
   useEffect(() => {
     let isMounted = true
+    let shouldFetchCollections = false
+
+    if (isLoaded && isSignedIn) {
+      shouldFetchCollections = true
+    }
+
     const fetchCollections = async () => {
       try {
         if (user && user.id) {
@@ -113,7 +109,7 @@ export default function GenerateQuiz() {
       }
     }
 
-    if (isLoaded && isSignedIn) {
+    if (shouldFetchCollections) {
       fetchCollections()
     } else {
       setCollectionsLoaded(true)
@@ -176,6 +172,7 @@ export default function GenerateQuiz() {
     setDialogOpen(false)
   }
 
+  // Update saveQuiz function to use the User model
   const saveQuiz = async () => {
     if (!name && !selectedCollection) {
       alert("Please enter a name for your quiz set or select an existing collection.")
@@ -183,12 +180,6 @@ export default function GenerateQuiz() {
     }
 
     try {
-      const batch = writeBatch(db)
-      const userDocRef = doc(collection(db, "users"), user.id)
-
-      const docSnap = await getDoc(userDocRef)
-      const flashcardSets = docSnap.exists() ? docSnap.data().flashcardSets || [] : []
-
       // Convert quiz questions to flashcards format
       const flashcards = quizQuestions.map((question, index) => ({
         id: index.toString(),
@@ -196,40 +187,7 @@ export default function GenerateQuiz() {
         back: `Answer: ${question.options[question.correctAnswer]}\n\nOptions:\n${question.options.join("\n")}`,
       }))
 
-      if (name) {
-        if (flashcardSets.find((set) => set.name === name)) {
-          alert("A flashcard set with that name already exists.")
-          return
-        } else {
-          // Add isQuiz property to identify this as a quiz set
-          flashcardSets.push({
-            name,
-            flashcards,
-            isQuiz: true, // Add this property
-          })
-          batch.set(userDocRef, { flashcardSets }, { merge: true })
-        }
-      } else {
-        if (selectedCollection && !flashcardSets.find((set) => set.name === selectedCollection)) {
-          alert("Selected collection does not exist.")
-          return
-        }
-      }
-
-      const colRef = selectedCollection ? collection(userDocRef, selectedCollection) : collection(userDocRef, name)
-
-      flashcards.forEach((card) => {
-        if (!card.id) {
-          console.error("Card ID is missing:", card)
-          return
-        }
-
-        const cardDocRef = doc(colRef, card.id)
-        batch.set(cardDocRef, card)
-      })
-
-      await batch.commit()
-      console.log("Batch committed successfully")
+      await myUser.saveFlashcardsToCollection(name, flashcards, true, selectedCollection)
       handleCloseDialog()
       router.push("/flashcards")
     } catch (error) {

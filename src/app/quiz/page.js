@@ -1,9 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useUser } from "@clerk/nextjs"
-import { collection, doc, getDocs, updateDoc } from "firebase/firestore"
-import { db } from "../../utils/firebase"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   Box,
@@ -38,6 +36,7 @@ import Navbar from "../../components/ui/navbar"
 import ChatBot from "../../components/chat-bot"
 import User from "../../models/user.model"
 
+
 export default function Quiz() {
   const { isLoaded, isSignedIn, user } = useUser()
   const [quizQuestions, setQuizQuestions] = useState([])
@@ -47,7 +46,6 @@ export default function Quiz() {
   const [score, setScore] = useState(0)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [collectionName, setCollectionName] = useState("")
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState(null)
 
@@ -58,49 +56,18 @@ export default function Quiz() {
   const searchParams = useSearchParams()
   const search = searchParams.get("id")
 
-  const myUser = isPreviewMode ? { generateQuiz: mockGenerateQuiz } : new User(user || {})
+  const myUser = new User(user)
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        setIsPreviewMode(true)
-        setCollectionName("Sample Quiz")
-        setLoading(false)
-        setQuizQuestions([
-          {
-            question: "What is the capital of France?",
-            options: ["London", "Berlin", "Paris", "Madrid"],
-            correctAnswer: 2,
-          },
-          {
-            question: "Which planet is known as the Red Planet?",
-            options: ["Venus", "Mars", "Jupiter", "Saturn"],
-            correctAnswer: 1,
-          },
-          {
-            question: "Who wrote 'Romeo and Juliet'?",
-            options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
-            correctAnswer: 1,
-          },
-        ])
-      }
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [isLoaded])
 
   useEffect(() => {
     async function getQuiz() {
-      if (!search || !user || isPreviewMode) return
+      if (!search) return
 
       setLoading(true)
       try {
-        const colRef = collection(doc(collection(db, "users"), user.id), search)
-        const docs = await getDocs(colRef)
-        const flashcardsData = []
-        docs.forEach((doc) => {
-          flashcardsData.push({ id: doc.id, ...doc.data() })
-        })
+        // If user is not loaded yet, return early
+        if (!user || !user.id) return
+        const flashcardsData = await myUser.getFlashcards(search)
 
         // Convert flashcards to quiz questions format
         const questions = flashcardsData.map((card) => {
@@ -145,14 +112,14 @@ export default function Quiz() {
       }
     }
 
-    if (isLoaded && isSignedIn && !isPreviewMode) {
+    if (isLoaded && isSignedIn) {
       getQuiz()
     }
-  }, [search, user, isLoaded, isSignedIn, isPreviewMode])
+  }, [search, isLoaded, isSignedIn, user?.id]) // Remove myUser from dependencies
 
   useEffect(() => {
     const updateUserStreak = async () => {
-      if (isLoaded && isSignedIn && user && !isPreviewMode && quizQuestions.length > 0) {
+      if (isLoaded && isSignedIn && user && quizQuestions.length > 0) {
         try {
           const userModel = new User(user)
           await userModel.updateStreak()
@@ -166,7 +133,7 @@ export default function Quiz() {
     if (quizQuestions.length > 0 && !loading) {
       updateUserStreak()
     }
-  }, [quizQuestions, isLoaded, isSignedIn, user, isPreviewMode, loading])
+  }, [quizQuestions, isLoaded, isSignedIn, user, loading])
 
   const handleAnswerSelect = (questionIndex, answerIndex) => {
     setUserAnswers({
@@ -223,22 +190,6 @@ export default function Quiz() {
       const updatedQuestions = [...quizQuestions]
       updatedQuestions[editingQuestion.index] = editingQuestion.data
 
-      if (!isPreviewMode) {
-        // Update in Firebase - this would need to convert back to flashcard format
-        const userDocRef = doc(collection(db, "users"), user.id)
-        const colRef = collection(userDocRef, collectionName)
-        const cardDocRef = doc(colRef, quizQuestions[editingQuestion.index].id)
-
-        // Convert quiz question back to flashcard format
-        const question = editingQuestion.data
-        const flashcardData = {
-          front: question.question,
-          back: `Answer: ${question.options[question.correctAnswer]}\n\nOptions:\n${question.options.join("\n")}`,
-        }
-
-        await updateDoc(cardDocRef, flashcardData)
-      }
-
       setQuizQuestions(updatedQuestions)
       setEditDialogOpen(false)
       setEditingQuestion(null)
@@ -264,27 +215,6 @@ export default function Quiz() {
   }
 
   // Mock function for preview mode
-  async function mockGenerateQuiz() {
-    return {
-      questions: [
-        {
-          question: "What is the capital of France?",
-          options: ["London", "Berlin", "Paris", "Madrid"],
-          correctAnswer: 2,
-        },
-        {
-          question: "Which planet is known as the Red Planet?",
-          options: ["Venus", "Mars", "Jupiter", "Saturn"],
-          correctAnswer: 1,
-        },
-        {
-          question: "Who wrote 'Romeo and Juliet'?",
-          options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
-          correctAnswer: 1,
-        },
-      ],
-    }
-  }
 
   return (
     <Box

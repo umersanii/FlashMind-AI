@@ -4,7 +4,7 @@ import { useUser } from "@clerk/clerk-react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { db } from "../../utils/firebase"
-import { writeBatch, getDoc, collection, doc } from "firebase/firestore"
+import { getDoc, collection, doc } from "firebase/firestore"
 import {
   Container,
   TextField,
@@ -63,7 +63,6 @@ export default function GenerateCards() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [collectionsLoaded, setCollectionsLoaded] = useState(false)
   const theme = useTheme()
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
 
   const [difficulty, setDifficulty] = useState(2)
   const [numQuestions, setNumQuestions] = useState(10)
@@ -71,23 +70,14 @@ export default function GenerateCards() {
   const [viewMode, setViewMode] = useState(0)
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!isLoaded) {
-        setIsPreviewMode(true)
-      }
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [isLoaded])
 
   useEffect(() => {
-    if (isLoaded && !isSignedIn && !isPreviewMode) {
+    if (isLoaded && !isSignedIn) {
       router.push("/")
     }
-  }, [isLoaded, isSignedIn, router, isPreviewMode])
+  }, [isLoaded, isSignedIn, router])
 
-  if (!isLoaded && !isPreviewMode) {
+  if (!isLoaded) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <CircularProgress />
@@ -95,7 +85,7 @@ export default function GenerateCards() {
     )
   }
 
-  const myUser = isPreviewMode ? { generateFlashcardSet: mockGenerateFlashcards } : new User(user || {})
+  const myUser = new User(user || {})
 
   useEffect(() => {
     let isMounted = true
@@ -120,13 +110,18 @@ export default function GenerateCards() {
       }
     }
 
-    // Always call fetchCollections, but conditionally execute its logic
     if (isLoaded) {
       if (isSignedIn) {
         fetchCollections()
       } else {
-        setCollectionsLoaded(true) // Set to true even if not signed in
+        setCollectionsLoaded(true)
       }
+    }
+
+    if (isLoaded && isSignedIn) {
+      fetchCollections()
+    } else {
+      setCollectionsLoaded(true)
     }
 
     return () => {
@@ -148,7 +143,6 @@ export default function GenerateCards() {
       setIsGenerating(true)
       console.log("Generating flashcards...")
 
-      // Pass difficulty and numQuestions to the API
       const deck = await myUser.generateFlashcardSet(text, difficulty, numQuestions)
 
       if (!deck || !deck.flashcards) {
@@ -165,7 +159,7 @@ export default function GenerateCards() {
 
       setFlipped(new Array(generatedFlashcards.length).fill(false))
       setFlashcards(generatedFlashcards)
-      setCurrentCardIndex(0) // Reset to first card
+      setCurrentCardIndex(0)
 
       console.log("Flashcards generated successfully:", generatedFlashcards)
     } catch (error) {
@@ -197,41 +191,7 @@ export default function GenerateCards() {
     }
 
     try {
-      const batch = writeBatch(db)
-      const userDocRef = doc(collection(db, "users"), user.id)
-
-      const docSnap = await getDoc(userDocRef)
-      const flashcardSets = docSnap.exists() ? docSnap.data().flashcardSets || [] : []
-
-      if (name) {
-        if (flashcardSets.find((set) => set.name === name)) {
-          alert("A flashcard set with that name already exists.")
-          return
-        } else {
-          flashcardSets.push({ name, flashcards })
-          batch.set(userDocRef, { flashcardSets }, { merge: true })
-        }
-      } else {
-        if (selectedCollection && !flashcardSets.find((set) => set.name === selectedCollection)) {
-          alert("Selected collection does not exist.")
-          return
-        }
-      }
-
-      const colRef = selectedCollection ? collection(userDocRef, selectedCollection) : collection(userDocRef, name)
-
-      flashcards.forEach((card) => {
-        if (!card.id) {
-          console.error("Card ID is missing:", card)
-          return
-        }
-
-        const cardDocRef = doc(colRef, card.id)
-        batch.set(cardDocRef, card)
-      })
-
-      await batch.commit()
-      console.log("Batch committed successfully")
+      await myUser.saveFlashcardsToCollection(name, flashcards, false, selectedCollection)
       handleCloseDialog()
       router.push("/flashcards")
     } catch (error) {
@@ -240,7 +200,6 @@ export default function GenerateCards() {
     }
   }
 
-  // New handlers for the enhanced UI
   const handleNextCard = () => {
     if (currentCardIndex < flashcards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1)
@@ -282,30 +241,6 @@ export default function GenerateCards() {
     }
   }
 
-  // Mock function for preview mode
-  async function mockGenerateFlashcards(text) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          flashcards: [
-            { front: "What is a flashcard?", back: "A card with a question on one side and the answer on the other." },
-            {
-              front: "How do flashcards help with learning?",
-              back: "They use active recall and spaced repetition to improve memory retention.",
-            },
-            {
-              front: "What is the best way to use flashcards?",
-              back: "Review them regularly and focus on the ones you find most difficult.",
-            },
-            {
-              front: "What is FlashMind?",
-              back: "An AI-powered flashcard application that helps you learn more effectively.",
-            },
-          ],
-        })
-      }, 1500)
-    })
-  }
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>

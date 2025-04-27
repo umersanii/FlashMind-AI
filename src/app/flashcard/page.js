@@ -1,9 +1,7 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState, useRef, useMemo } from "react"
 import { useUser } from "@clerk/nextjs"
-import { collection, doc, getDocs, updateDoc } from "firebase/firestore"
-import { db } from "../../utils/firebase"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
   Box,
@@ -71,7 +69,6 @@ export default function Flashcard() {
   const [showBookmarkedOnly, setShowBookmarkedOnly] = useState(false)
   const [filteredCards, setFilteredCards] = useState([])
   const [progress, setProgress] = useState(0)
-  const [isPreviewMode, setIsPreviewMode] = useState(false)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
 
@@ -83,52 +80,48 @@ export default function Flashcard() {
   const searchParams = useSearchParams()
   const search = searchParams.get("id")
 
-  const myUser = isPreviewMode ? { generateFlashcardSet: mockGenerateFlashcards } : new User(user || {})
+  const myUser = new User(user || {})
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!isLoaded) {
-        setIsPreviewMode(true)
         setCollectionName("Sample Collection")
         setLoading(false)
       }
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [isLoaded])
+  }, [isLoaded, search])
 
   useEffect(() => {
     async function getFlashcard() {
-      if (!search || !user || isPreviewMode) return
+      if (!search) return
 
       setLoading(true)
       try {
-        const colRef = collection(doc(collection(db, "users"), user.id), search)
-        const docs = await getDocs(colRef)
-        const flashcardsData = []
-        docs.forEach((doc) => {
-          flashcardsData.push({ id: doc.id, ...doc.data() })
-        })
+        if (!user || !user.id) return
+        const flashcardsData = await myUser.getFlashcards(search)
         setFlashcards(flashcardsData)
         setFilteredCards(flashcardsData)
         setCollectionName(search)
-
+        console.log("Flashcards:", flashcardsData)
         setProgress(0)
       } catch (error) {
         console.error("Error fetching flashcards:", error)
+        setLoading(false)
       } finally {
         setLoading(false)
       }
     }
 
-    if (isLoaded && isSignedIn && !isPreviewMode) {
+    if (isLoaded && isSignedIn) {
       getFlashcard()
     }
-  }, [search, user, isLoaded, isSignedIn, isPreviewMode])
+  }, [search, isLoaded, isSignedIn, user?.id]) // Remove myUser from dependencies
 
   useEffect(() => {
     const updateUserStreak = async () => {
-      if (isLoaded && isSignedIn && user && !isPreviewMode && flashcards.length > 0) {
+      if (isLoaded && isSignedIn && user && flashcards.length > 0) {
         try {
           const userModel = new User(user)
           await userModel.updateStreak()
@@ -142,7 +135,7 @@ export default function Flashcard() {
     if (flashcards.length > 0 && !loading) {
       updateUserStreak()
     }
-  }, [flashcards, isLoaded, isSignedIn, user, isPreviewMode, loading])
+  }, [flashcards, isLoaded, isSignedIn, user, loading])
 
   useEffect(() => {
     if (showBookmarkedOnly) {
@@ -235,13 +228,6 @@ export default function Flashcard() {
     try {
       const updatedCards = [...filteredCards]
       updatedCards[editingCard.index] = editingCard.data
-
-      if (!isPreviewMode) {
-        const userDocRef = doc(collection(db, "users"), user.id)
-        const colRef = collection(userDocRef, collectionName)
-        const cardDocRef = doc(colRef, filteredCards[editingCard.index].id)
-        await updateDoc(cardDocRef, editingCard.data)
-      }
 
       setFilteredCards(updatedCards)
       setFlashcards(updatedCards)
