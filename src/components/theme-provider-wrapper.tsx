@@ -6,7 +6,7 @@ import { ThemeProvider, CssBaseline } from "@mui/material"
 import { ColorModeContext, useMode } from "../app/theme"
 
 export default function ThemeProviderWrapper({ children }: { children: React.ReactNode }) {
-  const [theme, colorMode] = useMode()
+  const [theme, colorMode] = useMode() as [typeof theme, { toggleColorMode: () => void }]
 
   return (
     <ColorModeContext.Provider value={colorMode}>
