@@ -22,6 +22,7 @@ import {
   TextField,
   useTheme,
   useMediaQuery,
+  Tooltip,
 } from "@mui/material"
 import {
   ChevronLeft,
@@ -31,11 +32,13 @@ import {
   Check,
   X,
   Edit,
+  TimerIcon,
 } from "lucide-react"
 import Navbar from "../../components/ui/navbar"
 import ChatBot from "../../components/chat-bot"
 import User from "../../models/user.model"
 import DownloadFlashcards from "../../components/download-flashcards"
+import PomodoroTimer from "../../components/pomodoro-timer"
 
 export default function Quiz() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -49,6 +52,7 @@ export default function Quiz() {
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingQuestion, setEditingQuestion] = useState(null)
   const [language, setLanguage] = useState("en") // Default language
+  const [showTimer, setShowTimer] = useState(true)
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -198,6 +202,10 @@ export default function Quiz() {
     }
   }
 
+  const toggleTimer = () => {
+    setShowTimer(!showTimer)
+  }
+
   if (!isLoaded || !isSignedIn) {
     return (
       <Box
@@ -213,8 +221,6 @@ export default function Quiz() {
       </Box>
     )
   }
-
-  // Mock function for preview mode
 
   return (
     <Box
@@ -272,6 +278,11 @@ export default function Quiz() {
                 </Typography>
               </Box>
               <Box sx={{ display: "flex", gap: 1 }}>
+                <Tooltip title={showTimer ? "Hide Timer" : "Show Timer"}>
+                  <IconButton onClick={toggleTimer} sx={{ color: "text.secondary" }}>
+                    <TimerIcon />
+                  </IconButton>
+                </Tooltip>
                 <Button variant="outlined" startIcon={<ArrowBack />} onClick={() => router.push("/flashcards")}>
                   Back to Collections
                 </Button>
@@ -488,6 +499,9 @@ export default function Quiz() {
           </Box>
         )}
       </Container>
+
+      {/* Pomodoro Timer */}
+      {showTimer && <PomodoroTimer position="floating" />}
 
       {/* Edit Dialog */}
       <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth>

@@ -44,11 +44,13 @@ import {
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
   Edit as EditIcon,
+  Timer as TimerIcon,
 } from "@mui/icons-material"
 import { motion, AnimatePresence } from "framer-motion"
 import Navbar from "../../components/ui/navbar"
 import ChatBot from "../../components/chat-bot"
 import DownloadFlashcards from "../../components/download-flashcards"
+import PomodoroTimer from "../../components/pomodoro-timer"
 
 import User from "../../models/user.model"
 
@@ -71,6 +73,7 @@ export default function Flashcard() {
   const [progress, setProgress] = useState(0)
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [editingCard, setEditingCard] = useState(null)
+  const [showTimer, setShowTimer] = useState(true)
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -91,7 +94,7 @@ export default function Flashcard() {
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [isLoaded, search, user])
+  }, [isLoaded, search])
 
   useEffect(() => {
     async function getFlashcard() {
@@ -238,6 +241,10 @@ export default function Flashcard() {
     }
   }
 
+  const toggleTimer = () => {
+    setShowTimer(!showTimer)
+  }
+
   if (!isLoaded || !isSignedIn) {
     return (
       <Box
@@ -346,6 +353,12 @@ export default function Flashcard() {
             </ListItemIcon>
             <ListItemText primary="Reset Progress" />
           </ListItem>
+          <ListItem button onClick={toggleTimer}>
+            <ListItemIcon sx={{ color: "primary.main" }}>
+              <RefreshIcon />
+            </ListItemIcon>
+            <ListItemText primary={showTimer ? "Hide Timer" : "Show Timer"} />
+          </ListItem>
         </List>
       </Drawer>
 
@@ -432,6 +445,31 @@ export default function Flashcard() {
                   </Box>
                 </Box>
                 <Box sx={{ display: "flex", gap: 1 }}>
+
+                  <Tooltip title="Toggle Timer">
+                    <IconButton
+                      onClick={toggleTimer}
+                      sx={{
+                        color: "text.secondary",
+                        bgcolor: "transparent",
+                        "&:hover": { bgcolor: "action.hover" },
+                      }}
+                    >
+                      <TimerIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Toggle View Mode">
+                    <IconButton
+                      onClick={toggleViewMode}
+                      sx={{
+                        color: "text.secondary",
+                        bgcolor: viewMode === "grid" ? "rgba(255, 215, 0, 0.1)" : "transparent",
+                        "&:hover": { bgcolor: "rgba(255, 215, 0, 0.1)" },
+                      }}
+                    >
+                      {viewMode === "grid" ? <ViewCarouselIcon /> : <ViewModuleIcon />}
+                    </IconButton>
+                  </Tooltip>
                   <Tooltip title={showBookmarkedOnly ? "Show All Cards" : "Show Bookmarked Only"}>
                     <IconButton
                       onClick={toggleShowBookmarkedOnly}
@@ -704,7 +742,7 @@ export default function Flashcard() {
             ) : (
               <Grid container spacing={3}>
                 {filteredCards.map((flashcard, index) => (
-                  <Grid item xs={12} sm={6} md={4} key={flashcard.id}>
+                  <Grid item xs={12} sm={6} md={4} key={flashcard.id} width={{ xs: "100%", sm: "47%", md: "360px" }}>
                     <MotionPaper
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -712,7 +750,7 @@ export default function Flashcard() {
                       elevation={0}
                       onClick={() => handleCardClick(flashcard.id)}
                       sx={{
-                        height: 200,
+                        height: 350,
                         borderRadius: 3,
                         perspective: "1000px",
                         backgroundColor: "transparent",
@@ -876,6 +914,9 @@ export default function Flashcard() {
           {fullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
         </Fab>
       </Zoom>
+
+      {/* Pomodoro Timer */}
+      {showTimer && <PomodoroTimer position="floating" />}
 
       {/* Study Assistant Chat Bot */}
       <ChatBot context={{ collectionName }} user={myUser} />
