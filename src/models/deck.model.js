@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 class Deck {
   constructor(id, name, description) {
     this.id = id
@@ -100,6 +101,18 @@ export async function createDeck(deckData) {
     console.error("Error creating deck:", error)
     throw error
   }
+=======
+import firebase from "../utils/firebase"
+
+export async function createDeck(deckData) {
+  try {
+    const docRef = await firebase.collection(firebase, "decks").add(deckData)
+    return { id: docRef.id }
+  } catch (error) {
+    console.error("Error creating deck:", error)
+    throw error
+  }
+>>>>>>> Stashed changes
 }
 
 export async function getDecks(userId) {
@@ -115,4 +128,7 @@ export async function getDecks(userId) {
     throw error
   }
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

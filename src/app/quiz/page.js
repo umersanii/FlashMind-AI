@@ -1,7 +1,11 @@
 "use client"
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { useEffect, useState } from "react"
+=======
+import { useState, useEffect } from "react"
+>>>>>>> Stashed changes
 =======
 import { useState, useEffect } from "react"
 >>>>>>> Stashed changes
@@ -13,6 +17,7 @@ import {
   Typography,
   Button,
   Paper,
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   CircularProgress,
   Radio,
@@ -149,6 +154,8 @@ export default function Quiz() {
       ...userAnswers,
       [questionIndex]: answerIndex,
 =======
+=======
+>>>>>>> Stashed changes
   Radio,
   RadioGroup,
   FormControlLabel,
@@ -362,19 +369,28 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
     setSelectedAnswers({
       ...selectedAnswers,
       [questionId]: answer,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     })
   }
 
   const handleNextQuestion = () => {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     if (currentQuestionIndex < quizQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
 =======
+=======
+>>>>>>> Stashed changes
     if (currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
     } else {
       handleFinishQuiz()
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
   }
@@ -385,6 +401,7 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
     }
   }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   const handlePageChange = (event, page) => {
     setCurrentQuestionIndex(page - 1)
@@ -447,6 +464,8 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
       >
         <CircularProgress sx={{ color: "primary.main" }} />
 =======
+=======
+>>>>>>> Stashed changes
   const handleFinishQuiz = () => {
     // Calculate score
     let correctCount = 0
@@ -477,12 +496,16 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
         <CircularProgress />
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       </Box>
     )
   }
 
   return (
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     <Box
       sx={{
@@ -754,6 +777,8 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
                   >
                     Submit Quiz
 =======
+=======
+>>>>>>> Stashed changes
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
@@ -834,11 +859,15 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
                     ) : (
                       "Generate Quiz"
                     )}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                   </Button>
                 </Box>
               </Box>
             )}
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
           </Box>
         )}
@@ -917,6 +946,8 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
       {/* Study Assistant Chat Bot */}
       <ChatBot context={{ collectionName }} user={myUser} />
 =======
+=======
+>>>>>>> Stashed changes
           </Paper>
         ) : !quizStarted ? (
           <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
@@ -1119,6 +1150,9 @@ export default function QuizPage({ darkMode, toggleDarkMode }) {
           </Box>
         )}
       </Container>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     </Box>
   )

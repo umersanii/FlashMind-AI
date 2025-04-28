@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { ClerkProvider } from "@clerk/nextjs"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
@@ -26,15 +27,24 @@ const clerkFrontendApi = process.env.NEXT_PUBLIC_CLERK_FRONTEND_API
 import ClientLayout from "./ClientLayout"
 
 export const metadata = {
+=======
+import ClientLayout from "./ClientLayout"
+
+export const metadata = {
+>>>>>>> Stashed changes
   title: "FlashMind AI - Smart Flashcard Learning",
   description: "AI-powered flashcard application for efficient learning",
     generator: 'v0.dev'
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
       <ClerkProvider frontendApi={clerkFrontendApi}>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -42,6 +52,8 @@ export default function RootLayout({ children }) {
         </body>
       </ClerkProvider>
 =======
+=======
+>>>>>>> Stashed changes
       <head>
         <link
           rel="stylesheet"
@@ -49,6 +61,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <ClientLayout>{children}</ClientLayout>
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     </html>
   )

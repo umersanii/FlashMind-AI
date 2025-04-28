@@ -2,12 +2,28 @@ import { POST } from "../api/llm_api.js"
 
 class AImodel {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   async genrateFlashcardSet(text, difficulty = 2, numQuestions = 10, language = "en") {
     const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
     const languagePrompt = language === "ur" ? "in Urdu language" : "in English language"
 =======
   async genrateFlashcardSet(text, difficulty = 2, numQuestions = 10) {
     const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
+=======
+  async genrateFlashcardSet(text, difficulty = 2, numQuestions = 10) {
+    const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
+
+    const systemPrompt = `
+    You are an intelligent flashcard generator for a SaaS platform called FlashMind AI. Your task is to create concise, informative, and effective flashcards based on user input. Each flashcard should include a question or term on the front and a clear, detailed answer or explanation on the back.
+
+    Create ${numQuestions} flashcards with a ${difficultyLevel} difficulty level.
+    
+    For easy difficulty: Focus on basic concepts and definitions.
+    For medium difficulty: Include more detailed explanations and some application of concepts.
+    For hard difficulty: Include complex concepts, relationships between ideas, and challenging applications.
+
+    Ensure that the content is accurate, educational, and appropriate for the target audience, which may vary from students to professionals. Format your responses in a way that is easy to read and understand, and strive to make each flashcard as useful as possible for learning and retention.
+>>>>>>> Stashed changes
 
     const systemPrompt = `
     You are an intelligent flashcard generator for a SaaS platform called FlashMind AI. Your task is to create concise, informative, and effective flashcards based on user input. Each flashcard should include a question or term on the front and a clear, detailed answer or explanation on the back.
@@ -55,6 +71,7 @@ class AImodel {
     return flashcards
   }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   async generateQuiz(text, difficulty = 2, numQuestions = 5, language = "en") {
     const difficultyLevel = ["easy", "medium", "hard"][difficulty - 1] || "medium"
@@ -122,6 +139,8 @@ class AImodel {
       console.error("Error getting response from AI:", error)
       throw error
 =======
+=======
+>>>>>>> Stashed changes
   async generateQuiz(flashcards, numQuestions = 5) {
     // Select a subset of flashcards to create a quiz
     const selectedCards = this.selectFlashcardsForQuiz(flashcards, numQuestions)
@@ -200,6 +219,9 @@ class AImodel {
       totalReviewed: totalCards,
       correctAnswers,
       recommendation,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
   }

@@ -59,6 +59,9 @@ const getRandomGradient = () => {
 =======
 // Sample data for preview mode
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 export default function Flashcards() {
   const { isLoaded, isSignedIn, user } = useUser()

@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import AImodel from "../models/ai.model"
 import Deck from "../models/deck.model"
 import FlashCard from "../models/flashcard.model"
@@ -54,6 +55,14 @@ import FlashCard from "./flashcard.model"
 
 class User {
   constructor(clerkUser) {
+=======
+import AImodel from "./ai.model"
+import Deck from "./deck.model"
+import FlashCard from "./flashcard.model"
+
+class User {
+  constructor(clerkUser) {
+>>>>>>> Stashed changes
     this.id = clerkUser?.id || "preview-user"
     this.firstName = clerkUser?.firstName || "Guest"
     this.lastName = clerkUser?.lastName || "User"
@@ -71,6 +80,9 @@ class User {
       language: "en",
       notificationsEnabled: true,
       studyReminders: true,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
   }
@@ -97,6 +109,7 @@ class User {
     return deck
   }
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   async generateQuiz(text, difficulty = 2, numQuestions = 5) {
     console.log("Generating quiz for text with difficulty:", difficulty, "and questions:", numQuestions)
@@ -1094,6 +1107,8 @@ class User {
       console.error("Error checking achievements:", error)
       return []
 =======
+=======
+>>>>>>> Stashed changes
   async generateQuiz(deckId, numQuestions = 5) {
     const deck = this.flashcardSets.find((deck) => deck.id === deckId)
     if (!deck) {
@@ -1165,6 +1180,9 @@ class User {
       streakDays: this.streakDays,
       achievements: this.achievements,
       lastStudyDate: this.lastStudyDate,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     }
   }

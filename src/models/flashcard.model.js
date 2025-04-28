@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 class FlashCard {
   // constructor(id, front, back) {
   //     this.id = id;
@@ -54,6 +55,20 @@ export async function createFlashcard(flashcardData) {
   }
 }
 
+=======
+import firebase from "../utils/firebase"
+
+export async function createFlashcard(flashcardData) {
+  try {
+    const docRef = await firebase.collection(firebase, "flashcards").add(flashcardData)
+    return { id: docRef.id }
+  } catch (error) {
+    console.error("Error creating flashcard:", error)
+    throw error
+  }
+}
+
+>>>>>>> Stashed changes
 export async function getFlashcards(deckId) {
   try {
     const snapshot = await firebase.collection(firebase, "flashcards").where("deckId", "==", deckId).get()
@@ -67,4 +82,7 @@ export async function getFlashcards(deckId) {
     throw error
   }
 }
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes

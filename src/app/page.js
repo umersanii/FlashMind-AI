@@ -14,14 +14,20 @@ import {
   useTheme,
   Divider,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   Avatar,
   Skeleton,
   CardContent,
 =======
+=======
+>>>>>>> Stashed changes
   Card,
   CardContent,
   Chip,
   styled,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 } from "@mui/material"
 import {
@@ -32,10 +38,16 @@ import {
   ArrowForward as ArrowForwardIcon,
   Quiz as QuizIcon,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   LocalFireDepartment as FireIcon,
   EmojiEvents as TrophyIcon,
   CalendarMonth as CalendarIcon,
   CenterFocusStrong,
+=======
+  Mic as MicIcon,
+  Group as GroupIcon,
+  Insights as InsightsIcon,
+>>>>>>> Stashed changes
 =======
   Mic as MicIcon,
   Group as GroupIcon,
@@ -56,9 +68,19 @@ const GradientTypography = styled(Typography)(({ theme }) => ({
   WebkitTextFillColor: "transparent",
 }))
 
+// Styled components using Material UI
+const GradientTypography = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  background: "linear-gradient(45deg, #FFD700, #FFA500)",
+  backgroundClip: "text",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+}))
+
 const MotionBox = motion(Box)
 const MotionTypography = motion(Typography)
 const MotionPaper = motion(Paper)
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 const MotionCard = motion(Paper)
 
@@ -70,6 +92,10 @@ export default function Home() {
 =======
 const MotionCard = motion(Card)
 
+=======
+const MotionCard = motion(Card)
+
+>>>>>>> Stashed changes
 export default function Home({ darkMode, toggleDarkMode }) {
   const { isLoaded, isSignedIn } = useUser()
 >>>>>>> Stashed changes
@@ -165,7 +191,11 @@ export default function Home({ darkMode, toggleDarkMode }) {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 sx={{ position: "relative", height: { xs: 300, md: 400 }, width: "300px" }}
+=======
+                sx={{ position: "relative", height: { xs: 300, md: 400 }, width: "100%" }}
+>>>>>>> Stashed changes
 =======
                 sx={{ position: "relative", height: { xs: 300, md: 400 }, width: "100%" }}
 >>>>>>> Stashed changes
@@ -429,7 +459,11 @@ export default function Home({ darkMode, toggleDarkMode }) {
           {[
               {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 icon: <LightbulbIcon sx={{ fontSize: 40, color: "#fff" }}/>,
+=======
+                icon: <LightbulbIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+>>>>>>> Stashed changes
 =======
                 icon: <LightbulbIcon sx={{ fontSize: 40, color: "primary.main" }} />,
 >>>>>>> Stashed changes
@@ -473,10 +507,13 @@ export default function Home({ darkMode, toggleDarkMode }) {
               },
             ].map((feature, index) => (
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
               <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: isMobile ? "100%" : "48%", color: "text.primary" }}>
                 <MotionCard
                   initial={{ opacity: 0, y: 20 }}
 =======
+=======
+>>>>>>> Stashed changes
               <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: "48%", color: "text.primary" }}>
                 <MotionPaper
                   initial={{ opacity: 20, y: 20 }}
@@ -583,6 +620,108 @@ export default function Home({ darkMode, toggleDarkMode }) {
                       transform: "translateY(-8px)",
                       boxShadow: "0 12px 20px rgba(0, 0, 0, 0.2)",
                     },
+<<<<<<< Updated upstream
+                    position: "relative",
+                    overflow: "visible",
+=======
+>>>>>>> Stashed changes
+                  }}
+                >
+                  {feature.chip && (
+                    <Chip
+                      label={feature.chip}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        top: -10,
+                        right: 16,
+                        fontWeight: "bold",
+                      }}
+                    />
+                  )}
+                  <CardContent sx={{ p: 4 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Box sx={{ mr: 2 }}>{feature.icon}</Box>
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        {feature.title}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+<<<<<<< Updated upstream
+      {/* How It Works Section */}
+      <Box sx={{ py: 10, bgcolor: "background.paper" }}>
+=======
+      {/* New Features Section */}
+      <Box sx={{ py: 10, bgcolor: "background.default" }}>
+>>>>>>> Stashed changes
+        <Container maxWidth="xl">
+          <GradientTypography
+            component={motion.h2}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            variant="h3"
+            align="center"
+            sx={{ mb: 8 }}
+<<<<<<< Updated upstream
+=======
+          >
+            New Features
+          </GradientTypography>
+
+          <Grid container spacing={4}>
+            {[
+              {
+                icon: <QuizIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+                title: "AI-Powered Quizzes",
+                description: "Test your knowledge with intelligent quizzes that adapt to your learning progress.",
+                chip: "New",
+              },
+              {
+                icon: <MicIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+                title: "Voice Input",
+                description: "Create flashcards by speaking. Perfect for capturing ideas on the go.",
+                chip: "New",
+              },
+              {
+                icon: <GroupIcon sx={{ fontSize: 40, color: "success.main" }} />,
+                title: "Collaborative Study",
+                description: "Share decks and study together with friends or classmates.",
+                chip: "New",
+              },
+              {
+                icon: <InsightsIcon sx={{ fontSize: 40, color: "warning.main" }} />,
+                title: "Performance Analytics",
+                description: "Track your progress with detailed insights and personalized recommendations.",
+                chip: "New",
+              },
+            ].map((feature, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <MotionCard
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  sx={{
+                    height: "100%",
+                    borderRadius: 4,
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    "&:hover": {
+                      transform: "translateY(-8px)",
+                      boxShadow: "0 12px 20px rgba(0, 0, 0, 0.2)",
+                    },
                     position: "relative",
                     overflow: "visible",
                   }}
@@ -630,6 +769,7 @@ export default function Home({ darkMode, toggleDarkMode }) {
             variant="h3"
             align="center"
             sx={{ mb: 8 }}
+>>>>>>> Stashed changes
           >
             How It Works
           </GradientTypography>
@@ -705,6 +845,7 @@ export default function Home({ darkMode, toggleDarkMode }) {
         </Container>
       </Box>
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
       {/* Learning Tools Section */}
       <Box sx={{ py: 10, bgcolor: "background.paper" }}>
@@ -951,6 +1092,8 @@ export default function Home({ darkMode, toggleDarkMode }) {
         </Container>
       </Box>
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
       {/* Footer */}
