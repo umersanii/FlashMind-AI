@@ -1,6 +1,10 @@
 "use client"
 
+<<<<<<< Updated upstream
 import { useEffect, useState } from "react"
+=======
+import { useState, useEffect } from "react"
+>>>>>>> Stashed changes
 import { useUser } from "@clerk/nextjs"
 import { useRouter, useSearchParams } from "next/navigation"
 import {
@@ -9,6 +13,7 @@ import {
   Typography,
   Button,
   Paper,
+<<<<<<< Updated upstream
   CircularProgress,
   Radio,
   RadioGroup,
@@ -143,12 +148,234 @@ export default function Quiz() {
     setUserAnswers({
       ...userAnswers,
       [questionIndex]: answerIndex,
+=======
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  CircularProgress,
+  Card,
+  CardContent,
+  Divider,
+  Chip,
+  LinearProgress,
+  Select,
+  MenuItem,
+  InputLabel,
+  Grid,
+  useTheme,
+} from "@mui/material"
+import {
+  ArrowBack as ArrowBackIcon,
+  ArrowForward as ArrowForwardIcon,
+  Check as CheckIcon,
+  Close as CloseIcon,
+  Refresh as RefreshIcon,
+  QuestionAnswer as QuestionAnswerIcon,
+  Timer as TimerIcon,
+  EmojiEvents as EmojiEventsIcon,
+} from "@mui/icons-material"
+import { collection, doc, getDoc } from "firebase/firestore"
+import { db } from "../../utils/firebase"
+import Navbar from "../../components/ui/navbar"
+import User from "../../models/user.model"
+
+export default function QuizPage({ darkMode, toggleDarkMode }) {
+  const { isLoaded, isSignedIn, user } = useUser()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const deckId = searchParams.get("id")
+
+  const [collections, setCollections] = useState([])
+  const [selectedCollection, setSelectedCollection] = useState("")
+  const [numQuestions, setNumQuestions] = useState(5)
+  const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [quiz, setQuiz] = useState(null)
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
+  const [selectedAnswers, setSelectedAnswers] = useState({})
+  const [showResults, setShowResults] = useState(false)
+  const [timeRemaining, setTimeRemaining] = useState(null)
+  const [quizStarted, setQuizStarted] = useState(false)
+  const [score, setScore] = useState(0)
+  const [isPreviewMode, setIsPreviewMode] = useState(false)
+
+  const theme = useTheme()
+
+  // Sample quiz data for preview mode
+  const sampleQuiz = {
+    id: "sample-quiz",
+    title: "Sample Quiz",
+    questions: [
+      {
+        id: "q1",
+        question: "What is the capital of France?",
+        options: ["Paris", "London", "Berlin", "Madrid"],
+        correctAnswer: "Paris",
+        explanation: "Paris is the capital and most populous city of France.",
+      },
+      {
+        id: "q2",
+        question: "Which planet is known as the Red Planet?",
+        options: ["Venus", "Mars", "Jupiter", "Saturn"],
+        correctAnswer: "Mars",
+        explanation: "Mars is called the Red Planet because of its reddish appearance.",
+      },
+      {
+        id: "q3",
+        question: "What is the chemical symbol for gold?",
+        options: ["Go", "Gd", "Au", "Ag"],
+        correctAnswer: "Au",
+        explanation: "The chemical symbol for gold is Au, from the Latin word 'aurum'.",
+      },
+      {
+        id: "q4",
+        question: "Who wrote 'Romeo and Juliet'?",
+        options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+        correctAnswer: "William Shakespeare",
+        explanation: "Romeo and Juliet is a tragedy written by William Shakespeare.",
+      },
+      {
+        id: "q5",
+        question: "What is the largest organ in the human body?",
+        options: ["Heart", "Liver", "Skin", "Brain"],
+        correctAnswer: "Skin",
+        explanation: "The skin is the largest organ of the human body.",
+      },
+    ],
+    totalQuestions: 5,
+  }
+
+  // Check if we're in preview mode
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        setIsPreviewMode(true)
+        setLoading(false)
+        setCollections([
+          { id: "sample-biology", name: "Biology" },
+          { id: "sample-history", name: "History" },
+          { id: "sample-math", name: "Mathematics" },
+        ])
+      }
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [isLoaded])
+
+  // Fetch collections when user is loaded
+  useEffect(() => {
+    if (isLoaded && isSignedIn && !isPreviewMode) {
+      fetchCollections()
+    }
+  }, [isLoaded, isSignedIn, isPreviewMode])
+
+  // If deck ID is provided, load that specific deck
+  useEffect(() => {
+    if (deckId && isLoaded && isSignedIn) {
+      setSelectedCollection(deckId)
+      handleGenerateQuiz()
+    }
+  }, [deckId, isLoaded, isSignedIn])
+
+  const fetchCollections = async () => {
+    try {
+      setLoading(true)
+      const userDocRef = doc(collection(db, "users"), user.id)
+      const docSnap = await getDoc(userDocRef)
+
+      if (docSnap.exists()) {
+        const flashcardSets = docSnap.data().flashcardSets || []
+        setCollections(flashcardSets.map((set) => ({ id: set.name, name: set.name })))
+      }
+
+      setLoading(false)
+    } catch (error) {
+      console.error("Error fetching collections:", error)
+      setLoading(false)
+    }
+  }
+
+  const handleGenerateQuiz = async () => {
+    if (!selectedCollection) {
+      alert("Please select a collection")
+      return
+    }
+
+    try {
+      setGenerating(true)
+
+      if (isPreviewMode) {
+        // Use sample quiz in preview mode
+        setTimeout(() => {
+          setQuiz(sampleQuiz)
+          setGenerating(false)
+          resetQuiz()
+        }, 1500)
+        return
+      }
+
+      // Generate quiz using the user's model
+      const myUser = new User(user)
+      const generatedQuiz = await myUser.generateQuiz(selectedCollection, numQuestions)
+
+      setQuiz(generatedQuiz)
+      resetQuiz()
+      setGenerating(false)
+    } catch (error) {
+      console.error("Error generating quiz:", error)
+      setGenerating(false)
+      alert("Failed to generate quiz. Please try again.")
+    }
+  }
+
+  const resetQuiz = () => {
+    setCurrentQuestionIndex(0)
+    setSelectedAnswers({})
+    setShowResults(false)
+    setQuizStarted(false)
+    setScore(0)
+    setTimeRemaining(numQuestions * 30) // 30 seconds per question
+  }
+
+  const startQuiz = () => {
+    setQuizStarted(true)
+    // Start timer
+    const timer = setInterval(() => {
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer)
+          if (!showResults) {
+            handleFinishQuiz()
+          }
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    // Cleanup timer on component unmount
+    return () => clearInterval(timer)
+  }
+
+  const handleAnswerSelect = (questionId, answer) => {
+    setSelectedAnswers({
+      ...selectedAnswers,
+      [questionId]: answer,
+>>>>>>> Stashed changes
     })
   }
 
   const handleNextQuestion = () => {
+<<<<<<< Updated upstream
     if (currentQuestionIndex < quizQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1)
+=======
+    if (currentQuestionIndex < quiz.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1)
+    } else {
+      handleFinishQuiz()
+>>>>>>> Stashed changes
     }
   }
 
@@ -158,6 +385,7 @@ export default function Quiz() {
     }
   }
 
+<<<<<<< Updated upstream
   const handlePageChange = (event, page) => {
     setCurrentQuestionIndex(page - 1)
   }
@@ -218,11 +446,44 @@ export default function Quiz() {
         }}
       >
         <CircularProgress sx={{ color: "primary.main" }} />
+=======
+  const handleFinishQuiz = () => {
+    // Calculate score
+    let correctCount = 0
+    quiz.questions.forEach((question) => {
+      if (selectedAnswers[question.id] === question.correctAnswer) {
+        correctCount++
+      }
+    })
+
+    setScore(correctCount)
+    setShowResults(true)
+  }
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs < 10 ? "0" : ""}${secs}`
+  }
+
+  const getScoreColor = () => {
+    const percentage = (score / quiz.questions.length) * 100
+    if (percentage >= 80) return "success.main"
+    if (percentage >= 60) return "warning.main"
+    return "error.main"
+  }
+
+  if (!isLoaded || (!isSignedIn && !isPreviewMode)) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+        <CircularProgress />
+>>>>>>> Stashed changes
       </Box>
     )
   }
 
   return (
+<<<<<<< Updated upstream
     <Box
       sx={{
         minHeight: "100vh",
@@ -492,10 +753,93 @@ export default function Quiz() {
                     sx={{ ml: 2 }}
                   >
                     Submit Quiz
+=======
+    <Box sx={{ minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>
+      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+
+      <Container maxWidth="lg" sx={{ py: 4, mt: 8 }}>
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, display: "flex", alignItems: "center" }}>
+            <QuestionAnswerIcon sx={{ mr: 2, color: "primary.main" }} />
+            Quiz Mode
+          </Typography>
+          <Typography variant="body1" sx={{ color: "text.secondary", mt: 1 }}>
+            Test your knowledge with AI-generated quizzes based on your flashcards
+          </Typography>
+        </Box>
+
+        {!quiz ? (
+          <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+            <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+              Generate a New Quiz
+            </Typography>
+
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : (
+              <Box>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth sx={{ mb: 3 }}>
+                      <InputLabel>Select Collection</InputLabel>
+                      <Select
+                        value={selectedCollection}
+                        onChange={(e) => setSelectedCollection(e.target.value)}
+                        label="Select Collection"
+                      >
+                        <MenuItem value="">
+                          <em>Select a collection</em>
+                        </MenuItem>
+                        {collections.map((collection) => (
+                          <MenuItem key={collection.id} value={collection.id}>
+                            {collection.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12} md={6}>
+                    <FormControl fullWidth sx={{ mb: 3 }}>
+                      <InputLabel>Number of Questions</InputLabel>
+                      <Select
+                        value={numQuestions}
+                        onChange={(e) => setNumQuestions(e.target.value)}
+                        label="Number of Questions"
+                      >
+                        <MenuItem value={5}>5 questions</MenuItem>
+                        <MenuItem value={10}>10 questions</MenuItem>
+                        <MenuItem value={15}>15 questions</MenuItem>
+                        <MenuItem value={20}>20 questions</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={handleGenerateQuiz}
+                    disabled={generating || !selectedCollection}
+                    sx={{ px: 4, py: 1.5 }}
+                  >
+                    {generating ? (
+                      <>
+                        <CircularProgress size={24} sx={{ mr: 1, color: "inherit" }} />
+                        Generating Quiz...
+                      </>
+                    ) : (
+                      "Generate Quiz"
+                    )}
+>>>>>>> Stashed changes
                   </Button>
                 </Box>
               </Box>
             )}
+<<<<<<< Updated upstream
           </Box>
         )}
       </Container>
@@ -572,6 +916,210 @@ export default function Quiz() {
 
       {/* Study Assistant Chat Bot */}
       <ChatBot context={{ collectionName }} user={myUser} />
+=======
+          </Paper>
+        ) : !quizStarted ? (
+          <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+            <Box sx={{ textAlign: "center", py: 3 }}>
+              <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                {quiz.title || "Quiz Ready"}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 4, color: "text.secondary" }}>
+                This quiz contains {quiz.questions.length} questions. You'll have {formatTime(timeRemaining)} to
+                complete it.
+              </Typography>
+              <Button variant="contained" size="large" onClick={startQuiz} sx={{ px: 4, py: 1.5 }}>
+                Start Quiz
+              </Button>
+            </Box>
+          </Paper>
+        ) : showResults ? (
+          <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+            <Box sx={{ textAlign: "center", py: 3 }}>
+              <EmojiEventsIcon sx={{ fontSize: 60, color: getScoreColor(), mb: 2 }} />
+              <Typography variant="h4" sx={{ mb: 2, fontWeight: 700 }}>
+                Quiz Completed!
+              </Typography>
+              <Typography variant="h5" sx={{ mb: 4, color: getScoreColor() }}>
+                Your Score: {score}/{quiz.questions.length} ({Math.round((score / quiz.questions.length) * 100)}%)
+              </Typography>
+
+              <Box sx={{ mb: 4 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={(score / quiz.questions.length) * 100}
+                  sx={{
+                    height: 10,
+                    borderRadius: 5,
+                    bgcolor: "background.paper",
+                    "& .MuiLinearProgress-bar": {
+                      bgcolor: getScoreColor(),
+                    },
+                  }}
+                />
+              </Box>
+
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Review Your Answers
+              </Typography>
+
+              {quiz.questions.map((question, index) => (
+                <Card
+                  key={question.id}
+                  sx={{
+                    mb: 3,
+                    borderLeft: 5,
+                    borderColor:
+                      selectedAnswers[question.id] === question.correctAnswer ? "success.main" : "error.main",
+                    borderRadius: 2,
+                  }}
+                >
+                  <CardContent>
+                    <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600 }}>
+                      Question {index + 1}: {question.question}
+                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <Typography variant="body2" sx={{ mr: 1 }}>
+                        Your answer:
+                      </Typography>
+                      <Chip
+                        label={selectedAnswers[question.id] || "Not answered"}
+                        color={selectedAnswers[question.id] === question.correctAnswer ? "success" : "error"}
+                        icon={selectedAnswers[question.id] === question.correctAnswer ? <CheckIcon /> : <CloseIcon />}
+                        size="small"
+                      />
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center" }}>
+                      <Typography variant="body2" sx={{ mr: 1 }}>
+                        Correct answer:
+                      </Typography>
+                      <Chip label={question.correctAnswer} color="success" size="small" />
+                    </Box>
+                    {question.explanation && (
+                      <Box sx={{ mt: 2, p: 2, bgcolor: "background.paper", borderRadius: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          <strong>Explanation:</strong> {question.explanation}
+                        </Typography>
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+
+              <Box sx={{ display: "flex", justifyContent: "center", gap: 2, mt: 4 }}>
+                <Button variant="outlined" onClick={resetQuiz} startIcon={<RefreshIcon />}>
+                  Retake Quiz
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setQuiz(null)
+                    setSelectedCollection("")
+                  }}
+                >
+                  Create New Quiz
+                </Button>
+              </Box>
+            </Box>
+          </Paper>
+        ) : (
+          <Box>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                mb: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                borderRadius: 3,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography variant="body1">
+                Question {currentQuestionIndex + 1} of {quiz.questions.length}
+              </Typography>
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <TimerIcon sx={{ mr: 1, color: timeRemaining < 30 ? "error.main" : "text.secondary" }} />
+                <Typography
+                  variant="body1"
+                  sx={{
+                    fontFamily: "monospace",
+                    fontWeight: "bold",
+                    color: timeRemaining < 30 ? "error.main" : "text.primary",
+                  }}
+                >
+                  {formatTime(timeRemaining)}
+                </Typography>
+              </Box>
+            </Paper>
+
+            <Paper elevation={0} sx={{ p: 4, borderRadius: 3, border: "1px solid", borderColor: "divider" }}>
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+                  {quiz.questions[currentQuestionIndex].question}
+                </Typography>
+
+                <FormControl component="fieldset" sx={{ width: "100%" }}>
+                  <RadioGroup
+                    value={selectedAnswers[quiz.questions[currentQuestionIndex].id] || ""}
+                    onChange={(e) => handleAnswerSelect(quiz.questions[currentQuestionIndex].id, e.target.value)}
+                  >
+                    {quiz.questions[currentQuestionIndex].options.map((option, index) => (
+                      <FormControlLabel
+                        key={index}
+                        value={option}
+                        control={<Radio />}
+                        label={option}
+                        sx={{
+                          p: 1.5,
+                          mb: 1,
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 2,
+                          width: "100%",
+                          "&:hover": {
+                            bgcolor: "action.hover",
+                          },
+                          ...(selectedAnswers[quiz.questions[currentQuestionIndex].id] === option && {
+                            bgcolor: "primary.light",
+                            borderColor: "primary.main",
+                          }),
+                        }}
+                      />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+              </Box>
+
+              <Divider sx={{ mb: 3 }} />
+
+              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Button
+                  variant="outlined"
+                  onClick={handlePrevQuestion}
+                  disabled={currentQuestionIndex === 0}
+                  startIcon={<ArrowBackIcon />}
+                >
+                  Previous
+                </Button>
+
+                {currentQuestionIndex === quiz.questions.length - 1 ? (
+                  <Button variant="contained" onClick={handleFinishQuiz} color="primary">
+                    Finish Quiz
+                  </Button>
+                ) : (
+                  <Button variant="contained" onClick={handleNextQuestion} endIcon={<ArrowForwardIcon />}>
+                    Next
+                  </Button>
+                )}
+              </Box>
+            </Paper>
+          </Box>
+        )}
+      </Container>
+>>>>>>> Stashed changes
     </Box>
   )
 }

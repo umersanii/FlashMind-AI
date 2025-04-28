@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 class Deck {
   constructor(id, name, description) {
     this.id = id
@@ -88,3 +89,30 @@ class Deck {
 }
 
 export default Deck
+=======
+import firebase from "../utils/firebase"
+
+export async function createDeck(deckData) {
+  try {
+    const docRef = await firebase.collection(firebase, "decks").add(deckData)
+    return { id: docRef.id }
+  } catch (error) {
+    console.error("Error creating deck:", error)
+    throw error
+  }
+}
+
+export async function getDecks(userId) {
+  try {
+    const snapshot = await firebase.collection(firebase, "decks").where("userId", "==", userId).get()
+
+    return snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+  } catch (error) {
+    console.error("Error getting decks:", error)
+    throw error
+  }
+}
+>>>>>>> Stashed changes

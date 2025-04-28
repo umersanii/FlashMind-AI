@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import AImodel from "../models/ai.model"
 import Deck from "../models/deck.model"
 import FlashCard from "../models/flashcard.model"
@@ -46,6 +47,31 @@ class User {
       autoStartBreaks: true,
       autoStartPomodoros: false,
       soundEnabled: true,
+=======
+import AImodel from "./ai.model"
+import Deck from "./deck.model"
+import FlashCard from "./flashcard.model"
+
+class User {
+  constructor(clerkUser) {
+    this.id = clerkUser?.id || "preview-user"
+    this.firstName = clerkUser?.firstName || "Guest"
+    this.lastName = clerkUser?.lastName || "User"
+    this.emailAddresses = clerkUser?.emailAddresses || []
+    this.primaryEmailAddress = clerkUser?.primaryEmailAddress || ""
+    this.profileImageUrl = clerkUser?.profileImageUrl || ""
+    this.publicMetadata = clerkUser?.publicMetadata || {}
+    this.privateMetadata = clerkUser?.privateMetadata || {}
+    this.flashcardSets = []
+    this.streakDays = 0
+    this.lastStudyDate = null
+    this.achievements = []
+    this.preferences = {
+      darkMode: false,
+      language: "en",
+      notificationsEnabled: true,
+      studyReminders: true,
+>>>>>>> Stashed changes
     }
   }
 
@@ -71,6 +97,7 @@ class User {
     return deck
   }
 
+<<<<<<< Updated upstream
   async generateQuiz(text, difficulty = 2, numQuestions = 5) {
     console.log("Generating quiz for text with difficulty:", difficulty, "and questions:", numQuestions)
     const model = new AImodel()
@@ -1066,6 +1093,79 @@ class User {
     } catch (error) {
       console.error("Error checking achievements:", error)
       return []
+=======
+  async generateQuiz(deckId, numQuestions = 5) {
+    const deck = this.flashcardSets.find((deck) => deck.id === deckId)
+    if (!deck) {
+      throw new Error("Deck not found")
+    }
+
+    const model = new AImodel()
+    const flashcards = deck.getFlashcards()
+
+    // Generate quiz questions based on flashcards
+    return await model.generateQuiz(flashcards, numQuestions)
+  }
+
+  updateStreak() {
+    const today = new Date().toDateString()
+
+    if (!this.lastStudyDate) {
+      this.streakDays = 1
+    } else {
+      const lastDate = new Date(this.lastStudyDate)
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+
+      if (lastDate.toDateString() === yesterday.toDateString()) {
+        this.streakDays += 1
+        this.checkAchievements()
+      } else if (lastDate.toDateString() !== today) {
+        this.streakDays = 1
+      }
+    }
+
+    this.lastStudyDate = today
+    return this.streakDays
+  }
+
+  checkAchievements() {
+    // Check streak-based achievements
+    if (this.streakDays === 7 && !this.achievements.includes("week-streak")) {
+      this.achievements.push("week-streak")
+    }
+    if (this.streakDays === 30 && !this.achievements.includes("month-streak")) {
+      this.achievements.push("month-streak")
+    }
+
+    // Check flashcard count achievements
+    const totalCards = this.flashcardSets.reduce((sum, deck) => sum + deck.getFlashcardCount(), 0)
+    if (totalCards >= 100 && !this.achievements.includes("100-cards")) {
+      this.achievements.push("100-cards")
+    }
+
+    return this.achievements
+  }
+
+  updatePreferences(preferences) {
+    this.preferences = {
+      ...this.preferences,
+      ...preferences,
+    }
+    return this.preferences
+  }
+
+  getStudyStats() {
+    const totalDecks = this.flashcardSets.length
+    const totalCards = this.flashcardSets.reduce((sum, deck) => sum + deck.getFlashcardCount(), 0)
+
+    return {
+      totalDecks,
+      totalCards,
+      streakDays: this.streakDays,
+      achievements: this.achievements,
+      lastStudyDate: this.lastStudyDate,
+>>>>>>> Stashed changes
     }
   }
 }

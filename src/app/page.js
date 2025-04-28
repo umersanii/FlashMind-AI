@@ -13,9 +13,16 @@ import {
   useMediaQuery,
   useTheme,
   Divider,
+<<<<<<< Updated upstream
   Avatar,
   Skeleton,
   CardContent,
+=======
+  Card,
+  CardContent,
+  Chip,
+  styled,
+>>>>>>> Stashed changes
 } from "@mui/material"
 import {
   Lightbulb as LightbulbIcon,
@@ -24,19 +31,35 @@ import {
   Devices as DevicesIcon,
   ArrowForward as ArrowForwardIcon,
   Quiz as QuizIcon,
+<<<<<<< Updated upstream
   LocalFireDepartment as FireIcon,
   EmojiEvents as TrophyIcon,
   CalendarMonth as CalendarIcon,
   CenterFocusStrong,
+=======
+  Mic as MicIcon,
+  Group as GroupIcon,
+  Insights as InsightsIcon,
+>>>>>>> Stashed changes
 } from "@mui/icons-material"
 import { motion } from "framer-motion"
 import Navbar from "../components/ui/navbar"
 import RecommendedTopics from "../components/recommended-topics"
 import User from "../models/user.model"
 
+// Styled components using Material UI
+const GradientTypography = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  background: "linear-gradient(45deg, #FFD700, #FFA500)",
+  backgroundClip: "text",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+}))
+
 const MotionBox = motion(Box)
 const MotionTypography = motion(Typography)
 const MotionPaper = motion(Paper)
+<<<<<<< Updated upstream
 const MotionCard = motion(Paper)
 
 export default function Home() {
@@ -44,6 +67,12 @@ export default function Home() {
   const [userModel, setUserModel] = useState(null)
   const [streakData, setStreakData] = useState(null)
   const [loading, setLoading] = useState(true)
+=======
+const MotionCard = motion(Card)
+
+export default function Home({ darkMode, toggleDarkMode }) {
+  const { isLoaded, isSignedIn } = useUser()
+>>>>>>> Stashed changes
   const router = useRouter()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down("md"))
@@ -80,7 +109,7 @@ export default function Home() {
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "background.default", color: "text.primary" }}>
-      <Navbar />
+      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
       {/* Hero Section */}
       <Box
@@ -95,21 +124,16 @@ export default function Home() {
           <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"} padding={{ xs: 2, md: 16 }}>
             <Grid item xs={12} md={6} width={isMobile ? "100%" : "60%"} >
               <MotionBox initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-                <MotionTypography
+                <GradientTypography
                   variant="h2"
                   component="h1"
                   sx={{
-                    fontWeight: 800,
                     mb: 3,
                     fontSize: { xs: "2.5rem", md: "3.5rem" },
-                    background: "linear-gradient(45deg, #FFD700, #FFA500)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
                   }}
                 >
                   Supercharge Your Learning with AI
-                </MotionTypography>
+                </GradientTypography>
 
                 <MotionTypography
                   variant="h6"
@@ -140,7 +164,11 @@ export default function Home() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
+<<<<<<< Updated upstream
                 sx={{ position: "relative", height: { xs: 300, md: 400 }, width: "300px" }}
+=======
+                sx={{ position: "relative", height: { xs: 300, md: 400 }, width: "100%" }}
+>>>>>>> Stashed changes
               >
                 <Box
                   sx={{
@@ -177,8 +205,9 @@ export default function Home() {
                     borderRadius: 4,
                     boxShadow: "0 20px 30px rgba(0, 0, 0, 0.2)",
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: "column",
                     justifyContent: "center",
+                    alignItems: "center",
                     p: 3,
                     color: "text.primary",
                     zIndex: 2,
@@ -383,29 +412,27 @@ export default function Home() {
       {/* Features Section */}
       <Box sx={{ py: 10, bgcolor: "background.paper" }}>
         <Container maxWidth="xl">
-          <MotionTypography
+          <GradientTypography
+            component={motion.h2}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
             variant="h3"
             align="center"
-            sx={{
-              fontWeight: 700,
-              mb: 8,
-              background: "linear-gradient(45deg, #FFD700, #FFA500)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
+            sx={{ mb: 8 }}
           >
             Why FlashMind?
-          </MotionTypography>
+          </GradientTypography>
 
           <Grid container spacing={4} alignItems="center" justifyContent={isMobile ? "center" : "space-between"} >
           {[
               {
+<<<<<<< Updated upstream
                 icon: <LightbulbIcon sx={{ fontSize: 40, color: "#fff" }}/>,
+=======
+                icon: <LightbulbIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+>>>>>>> Stashed changes
                 title: "AI-Powered Generation",
                 description:
                   "Our advanced AI analyzes your content and creates perfect question-answer pairs tailored to your learning needs.",
@@ -445,9 +472,15 @@ export default function Home() {
                 color: "linear-gradient(135deg, #FFC107, #FF9800)",
               },
             ].map((feature, index) => (
+<<<<<<< Updated upstream
               <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: isMobile ? "100%" : "48%", color: "text.primary" }}>
                 <MotionCard
                   initial={{ opacity: 0, y: 20 }}
+=======
+              <Grid item xs={12} sm={6} md={3} key={index} sx={{ width: "48%", color: "text.primary" }}>
+                <MotionPaper
+                  initial={{ opacity: 20, y: 20 }}
+>>>>>>> Stashed changes
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
@@ -486,31 +519,120 @@ export default function Home() {
               </Grid>
             ))}
           </Grid>
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         </Container>
       </Box>
 
-      {/* How It Works Section */}
+      {/* New Features Section */}
       <Box sx={{ py: 10, bgcolor: "background.default" }}>
         <Container maxWidth="xl">
-          <MotionTypography
+          <GradientTypography
+            component={motion.h2}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
             variant="h3"
             align="center"
-            sx={{
-              fontWeight: 700,
-              mb: 8,
-              background: "linear-gradient(45deg, #FFD700, #FFA500)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}
+            sx={{ mb: 8 }}
+          >
+            New Features
+          </GradientTypography>
+
+          <Grid container spacing={4}>
+            {[
+              {
+                icon: <QuizIcon sx={{ fontSize: 40, color: "primary.main" }} />,
+                title: "AI-Powered Quizzes",
+                description: "Test your knowledge with intelligent quizzes that adapt to your learning progress.",
+                chip: "New",
+              },
+              {
+                icon: <MicIcon sx={{ fontSize: 40, color: "secondary.main" }} />,
+                title: "Voice Input",
+                description: "Create flashcards by speaking. Perfect for capturing ideas on the go.",
+                chip: "New",
+              },
+              {
+                icon: <GroupIcon sx={{ fontSize: 40, color: "success.main" }} />,
+                title: "Collaborative Study",
+                description: "Share decks and study together with friends or classmates.",
+                chip: "New",
+              },
+              {
+                icon: <InsightsIcon sx={{ fontSize: 40, color: "warning.main" }} />,
+                title: "Performance Analytics",
+                description: "Track your progress with detailed insights and personalized recommendations.",
+                chip: "New",
+              },
+            ].map((feature, index) => (
+              <Grid item xs={12} md={6} key={index}>
+                <MotionCard
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  sx={{
+                    height: "100%",
+                    borderRadius: 4,
+                    transition: "transform 0.3s, box-shadow 0.3s",
+                    "&:hover": {
+                      transform: "translateY(-8px)",
+                      boxShadow: "0 12px 20px rgba(0, 0, 0, 0.2)",
+                    },
+                    position: "relative",
+                    overflow: "visible",
+                  }}
+                >
+                  {feature.chip && (
+                    <Chip
+                      label={feature.chip}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        position: "absolute",
+                        top: -10,
+                        right: 16,
+                        fontWeight: "bold",
+                      }}
+                    />
+                  )}
+                  <CardContent sx={{ p: 4 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                      <Box sx={{ mr: 2 }}>{feature.icon}</Box>
+                      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+                        {feature.title}
+                      </Typography>
+                    </Box>
+                    <Typography variant="body1" sx={{ color: "text.secondary" }}>
+                      {feature.description}
+                    </Typography>
+                  </CardContent>
+                </MotionCard>
+              </Grid>
+            ))}
+          </Grid>
+        </Container>
+      </Box>
+
+      {/* How It Works Section */}
+      <Box sx={{ py: 10, bgcolor: "background.paper" }}>
+        <Container maxWidth="xl">
+          <GradientTypography
+            component={motion.h2}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            viewport={{ once: true }}
+            variant="h3"
+            align="center"
+            sx={{ mb: 8 }}
           >
             How It Works
-          </MotionTypography>
+          </GradientTypography>
 
           <Grid container spacing={6} alignItems="center" justifyContent={isMobile ? "center" : "space-between"}>
             {[
@@ -583,6 +705,7 @@ export default function Home() {
         </Container>
       </Box>
 
+<<<<<<< Updated upstream
       {/* Learning Tools Section */}
       <Box sx={{ py: 10, bgcolor: "background.paper" }}>
         <Container maxWidth="xl">
@@ -828,6 +951,8 @@ export default function Home() {
         </Container>
       </Box>
 
+=======
+>>>>>>> Stashed changes
       {/* Footer */}
       <Box sx={{ py: 6, bgcolor: "background.default", borderTop: "1px solid", borderColor: "divider" }}>
         <Container maxWidth="xl">
@@ -835,18 +960,7 @@ export default function Home() {
             <Grid item xs={12} md={4}>
               <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                 <LightbulbIcon sx={{ color: "primary.main", mr: 1, fontSize: 24 }} />
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    background: "linear-gradient(45deg, #FFD700, #FFA500)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                  }}
-                >
-                  FlashMind
-                </Typography>
+                <GradientTypography variant="h6">FlashMind</GradientTypography>
               </Box>
               <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
                 AI-powered flashcards for smarter learning.

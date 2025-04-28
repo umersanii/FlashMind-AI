@@ -55,6 +55,11 @@ const getRandomGradient = () => {
   return gradients[Math.floor(Math.random() * gradients.length)]
 }
 
+<<<<<<< Updated upstream
+=======
+// Sample data for preview mode
+
+>>>>>>> Stashed changes
 export default function Flashcards() {
   const { isLoaded, isSignedIn, user } = useUser()
   const [flashcardSets, setFlashcardSets] = useState([])
