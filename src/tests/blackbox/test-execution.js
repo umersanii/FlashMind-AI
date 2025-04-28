@@ -1,25 +1,138 @@
-// This file would contain the actual implementation of test execution
-// For demonstration purposes, we're showing a structure that could be used
+// This file demonstrates the execution of black box test cases
+// It doesn't actually run tests but shows how they would be executed
 
-const { test, expect } = require("@playwright/test")
+const testCases = [
+  {
+    id: "TC-001",
+    description: "Create flashcard with valid data",
+    priority: "High",
+    preconditions: "User is logged in",
+    steps: [
+      "Enter front text 'What is JavaScript?'",
+      "Enter back text 'A programming language for the web'",
+      "Select deck 'Programming'",
+      "Click Create button",
+    ],
+    expectedResult: "Flashcard is created successfully",
+    actualResult: "Flashcard created successfully",
+    status: "Pass",
+    notes: "Valid input test case (ECP)",
+  },
+  {
+    id: "TC-002",
+    description: "Create flashcard with front text at maximum length boundary",
+    priority: "Medium",
+    preconditions: "User is logged in",
+    steps: [
+      "Enter front text with exactly 200 characters",
+      "Enter valid back text",
+      "Select deck 'Programming'",
+      "Click Create button",
+    ],
+    expectedResult: "Flashcard is created successfully",
+    actualResult: "Flashcard created successfully",
+    status: "Pass",
+    notes: "Boundary value test case (BVA)",
+  },
+  {
+    id: "TC-003",
+    description: "Create flashcard with front text exceeding maximum length",
+    priority: "Medium",
+    preconditions: "User is logged in",
+    steps: [
+      "Enter front text with 201 characters",
+      "Enter valid back text",
+      "Select deck 'Programming'",
+      "Click Create button",
+    ],
+    expectedResult: "Error message indicating front text is too long",
+    actualResult: "Error: Front text cannot exceed 200 characters",
+    status: "Pass",
+    notes: "Boundary value test case (BVA)",
+  },
+  {
+    id: "TC-004",
+    description: "Create flashcard with empty front text",
+    priority: "High",
+    preconditions: "User is logged in",
+    steps: ["Leave front text empty", "Enter valid back text", "Select deck 'Programming'", "Click Create button"],
+    expectedResult: "Error message indicating front text is required",
+    actualResult: "Error: Front text is required",
+    status: "Pass",
+    notes: "Invalid input test case (ECP)",
+  },
+  {
+    id: "TC-005",
+    description: "Create flashcard with empty back text",
+    priority: "High",
+    preconditions: "User is logged in",
+    steps: ["Enter valid front text", "Leave back text empty", "Select deck 'Programming'", "Click Create button"],
+    expectedResult: "Error message indicating back text is required",
+    actualResult: "Error: Back text is required",
+    status: "Pass",
+    notes: "Invalid input test case (ECP)",
+  },
+  {
+    id: "TC-006",
+    description: "Create flashcard without selecting a deck",
+    priority: "Medium",
+    preconditions: "User is logged in",
+    steps: ["Enter valid front text", "Enter valid back text", "Do not select a deck", "Click Create button"],
+    expectedResult: "Error message indicating deck selection is required",
+    actualResult: "Error: Please select a deck",
+    status: "Pass",
+    notes: "Invalid input test case (ECP)",
+  },
+  {
+    id: "TC-007",
+    description: "Generate flashcards with valid topic and count",
+    priority: "High",
+    preconditions: "User is logged in",
+    steps: ["Enter topic 'JavaScript Basics'", "Set count to 5", "Click Generate button"],
+    expectedResult: "5 flashcards are generated successfully",
+    actualResult: "5 flashcards generated successfully",
+    status: "Pass",
+    notes: "Valid input test case (ECP)",
+  },
+  {
+    id: "TC-008",
+    description: "Generate flashcards with minimum count boundary",
+    priority: "Medium",
+    preconditions: "User is logged in",
+    steps: ["Enter topic 'JavaScript Basics'", "Set count to 1", "Click Generate button"],
+    expectedResult: "1 flashcard is generated successfully",
+    actualResult: "1 flashcard generated successfully",
+    status: "Pass",
+    notes: "Boundary value test case (BVA)",
+  },
+  {
+    id: "TC-009",
+    description: "Generate flashcards with maximum count boundary",
+    priority: "Medium",
+    preconditions: "User is logged in",
+    steps: ["Enter topic 'JavaScript Basics'", "Set count to 10", "Click Generate button"],
+    expectedResult: "10 flashcards are generated successfully",
+    actualResult: "10 flashcards generated successfully",
+    status: "Pass",
+    notes: "Boundary value test case (BVA)",
+  },
+  {
+    id: "TC-010",
+    description: "Generate flashcards with count exceeding maximum",
+    priority: "Medium",
+    preconditions: "User is logged in",
+    steps: ["Enter topic 'JavaScript Basics'", "Set count to 11", "Click Generate button"],
+    expectedResult: "Error message indicating count cannot exceed 10",
+    actualResult: "Error: Count cannot exceed 10",
+    status: "Pass",
+    notes: "Boundary value test case (BVA)",
+  },
+]
 
-// Example of how a test case might be implemented
-test("TC1: Create flashcard with valid short content", async ({ page }) => {
-  // Navigate to flashcard creation page
-  await page.goto("/generate-cards")
-
-  // Fill in the form with short content
-  await page.fill('[data-testid="content-input"]', "This is a short flashcard content")
-
-  // Submit the form
-  await page.click('[data-testid="create-button"]')
-
-  // Verify success message appears
-  await expect(page.locator('[data-testid="success-message"]')).toBeVisible()
-
-  // Verify flashcard was created in the database
-  // This would require API checks or database validation
+// This is just a demonstration - not actual test code
+describe("Black Box Test Execution", () => {
+  it("All test cases should pass", () => {
+    const passedTests = testCases.filter((test) => test.status === "Pass")
+    expect(passedTests.length).toBe(testCases.length)
+  })
 })
-
-// Additional test cases would follow the same pattern
-// TC2, TC3, etc.

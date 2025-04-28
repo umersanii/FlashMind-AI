@@ -1,53 +1,9 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-class FlashCard {
-  // constructor(id, front, back) {
-  //     this.id = id;
-  //     this.front = front;
-  //     this.back = back;
-  // }
-  constructor(front, back) {
-    this.front = front
-    this.back = back
-  }
-  // json constructor
-  static fromJSON(json) {
-    return new FlashCard(json.id, json.front, json.back)
-  }
-  getId() {
-    return this.id
-  }
-  getFront() {
-    return this.front
-  }
-  getBack() {
-    return this.back
-  }
-  setFront(front) {
-    this.front = front
-  }
-  setBack(back) {
-    this.back = back
-  }
-  toJSON() {
-    return {
-      id: this.id,
-      front: this.front,
-      back: this.back,
-    }
-  }
-  static fromJSON(json) {
-    return new FlashCard(json.id, json.front, json.back)
-  }
-}
-
-export default FlashCard
-=======
-import firebase from "../utils/firebase"
+import { db } from "../utils/firebase"
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore"
 
 export async function createFlashcard(flashcardData) {
   try {
-    const docRef = await firebase.collection(firebase, "flashcards").add(flashcardData)
+    const docRef = await addDoc(collection(db, "flashcards"), flashcardData)
     return { id: docRef.id }
   } catch (error) {
     console.error("Error creating flashcard:", error)
@@ -55,23 +11,10 @@ export async function createFlashcard(flashcardData) {
   }
 }
 
-=======
-import firebase from "../utils/firebase"
-
-export async function createFlashcard(flashcardData) {
-  try {
-    const docRef = await firebase.collection(firebase, "flashcards").add(flashcardData)
-    return { id: docRef.id }
-  } catch (error) {
-    console.error("Error creating flashcard:", error)
-    throw error
-  }
-}
-
->>>>>>> Stashed changes
 export async function getFlashcards(deckId) {
   try {
-    const snapshot = await firebase.collection(firebase, "flashcards").where("deckId", "==", deckId).get()
+    const q = query(collection(db, "flashcards"), where("deckId", "==", deckId))
+    const snapshot = await getDocs(q)
 
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -82,7 +25,25 @@ export async function getFlashcards(deckId) {
     throw error
   }
 }
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
+export async function updateFlashcard(flashcardId, updatedData) {
+  try {
+    const flashcardRef = doc(db, "flashcards", flashcardId)
+    await updateDoc(flashcardRef, updatedData)
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating flashcard:", error)
+    throw error
+  }
+}
+
+export async function deleteFlashcard(flashcardId) {
+  try {
+    const flashcardRef = doc(db, "flashcards", flashcardId)
+    await deleteDoc(flashcardRef)
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting flashcard:", error)
+    throw error
+  }
+}

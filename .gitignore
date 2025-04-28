@@ -24,16 +24,4 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 next-env.d.ts
-
-# clerk configuration (can include secrets)
-/.clerk/
-src/src.zip
-=======
-next-env.d.ts
->>>>>>> Stashed changes
-=======
-next-env.d.ts
->>>>>>> Stashed changes

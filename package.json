@@ -6,34 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "jest",
-    "test:coverage": "jest --coverage"
+    "lint": "next lint"
   },
   "dependencies": {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    "@clerk/clerk-react": "^5.28.2",
-    "@clerk/nextjs": "^6.16.0",
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^7.0.2",
-    "@mui/material": "^7.0.2",
-    "@radix-ui/react-accordion": "^1.2.7",
-    "date-fns": "^4.1.0",
-    "dotenv": "^16.5.0",
-    "firebase": "^11.6.0",
-    "framer-motion": "^12.7.4",
-    "lucide-react": "^0.501.0",
-    "next": "15.3.1",
-    "next-themes": "^0.4.6",
-    "openai": "^4.95.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwindcss-animate": "^1.0.7"
-=======
-=======
->>>>>>> Stashed changes
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -84,12 +59,9 @@
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
     "ws": "latest",
-    "@jest/globals": "latest",
-    "openai": "latest"
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+    "firebase": "latest",
+    "openai": "latest",
+    "@testing-library/jest-dom": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

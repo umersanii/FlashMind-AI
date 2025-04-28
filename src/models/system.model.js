@@ -1,9 +1,32 @@
-// system.model.js
-class System {
-  static readNotes(file) {
-    // Dummy: Assume file reading success
-    return "These are the study notes extracted from file."
+// Simple system model implementation
+export async function getSystemSettings() {
+  try {
+    const response = await fetch("/api/settings")
+    if (!response.ok) {
+      throw new Error("Failed to fetch settings")
+    }
+    return await response.json()
+  } catch (error) {
+    console.error("Error getting system settings:", error)
+    throw error
   }
 }
 
-module.exports = System
+export async function updateSystemSettings(settings) {
+  try {
+    const response = await fetch("/api/settings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    })
+    if (!response.ok) {
+      throw new Error("Failed to update settings")
+    }
+    return await response.json()
+  } catch (error) {
+    console.error("Error updating system settings:", error)
+    throw error
+  }
+}

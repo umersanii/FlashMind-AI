@@ -1,123 +1,20 @@
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-class Deck {
-  constructor(id, name, description) {
-    this.id = id
-    this.name = name
-    this.description = description
-    this.flashcards = []
-  }
-
-  addFlashcard(flashcard) {
-    this.flashcards.push(flashcard)
-  }
-
-  removeFlashcard(flashcardId) {
-    this.flashcards = this.flashcards.filter((flashcard) => flashcard.id !== flashcardId)
-  }
-
-  getFlashcards() {
-    return this.flashcards
-  }
-
-  getDeckInfo() {
-    return {
-      id: this.id,
-      name: this.name,
-      description: this.description,
-      flashcards: this.flashcards,
-    }
-  }
-
-  updateDeckInfo(name, description) {
-    this.name = name
-    this.description = description
-  }
-  getFlashcardById(flashcardId) {
-    return this.flashcards.find((flashcard) => flashcard.id === flashcardId)
-  }
-  getFlashcardByFront(front) {
-    return this.flashcards.find((flashcard) => flashcard.front === front)
-  }
-  getFlashcardByBack(back) {
-    return this.flashcards.find((flashcard) => flashcard.back === back)
-  }
-  getFlashcardByIndex(index) {
-    return this.flashcards[index]
-  }
-  getFlashcardCount() {
-    return this.flashcards.length
-  }
-  getDeckName() {
-    return this.name
-  }
-  getDeckDescription() {
-    return this.description
-  }
-  getDeckId() {
-    return this.id
-  }
-  getDeckFlashcards() {
-    return this.flashcards
-  }
-  getDeckFlashcardCount() {
-    return this.flashcards.length
-  }
-  getDeckFlashcardById(flashcardId) {
-    return this.flashcards.find((flashcard) => flashcard.id === flashcardId)
-  }
-  getDeckFlashcardByFront(front) {
-    return this.flashcards.find((flashcard) => flashcard.front === front)
-  }
-  getDeckFlashcardByBack(back) {
-    return this.flashcards.find((flashcard) => flashcard.back === back)
-  }
-  getDeckFlashcardByIndex(index) {
-    return this.flashcards[index]
-  }
-  getDeckFlashcardCount() {
-    return this.flashcards.length
-  }
-  getDeckFlashcardById(flashcardId) {
-    return this.flashcards.find((flashcard) => flashcard.id === flashcardId)
-  }
-  getDeckFlashcardByFront(front) {
-    return this.flashcards.find((flashcard) => flashcard.front === front)
-  }
-  getDeckFlashcardByBack(back) {
-    return this.flashcards.find((flashcard) => flashcard.back === back)
-  }
-}
-
-export default Deck
-=======
-import firebase from "../utils/firebase"
+import { db } from "../utils/firebase"
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore"
 
 export async function createDeck(deckData) {
   try {
-    const docRef = await firebase.collection(firebase, "decks").add(deckData)
+    const docRef = await addDoc(collection(db, "decks"), deckData)
     return { id: docRef.id }
   } catch (error) {
     console.error("Error creating deck:", error)
     throw error
   }
-=======
-import firebase from "../utils/firebase"
-
-export async function createDeck(deckData) {
-  try {
-    const docRef = await firebase.collection(firebase, "decks").add(deckData)
-    return { id: docRef.id }
-  } catch (error) {
-    console.error("Error creating deck:", error)
-    throw error
-  }
->>>>>>> Stashed changes
 }
 
 export async function getDecks(userId) {
   try {
-    const snapshot = await firebase.collection(firebase, "decks").where("userId", "==", userId).get()
+    const q = query(collection(db, "decks"), where("userId", "==", userId))
+    const snapshot = await getDocs(q)
 
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -128,7 +25,25 @@ export async function getDecks(userId) {
     throw error
   }
 }
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+
+export async function updateDeck(deckId, updatedData) {
+  try {
+    const deckRef = doc(db, "decks", deckId)
+    await updateDoc(deckRef, updatedData)
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating deck:", error)
+    throw error
+  }
+}
+
+export async function deleteDeck(deckId) {
+  try {
+    const deckRef = doc(db, "decks", deckId)
+    await deleteDoc(deckRef)
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting deck:", error)
+    throw error
+  }
+}

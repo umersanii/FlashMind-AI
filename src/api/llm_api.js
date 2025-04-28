@@ -1,30 +1,29 @@
 import OpenAI from "openai"
-import 'openai/shims/node';
 
-
-export async function POST(req, systemPrompt, apiKey) {
+export async function generateFlashcards(topic, count = 5) {
   try {
     const openai = new OpenAI({
-      apiKey: apiKey,
-      baseURL: "https://openrouter.ai/api/v1",
-      dangerouslyAllowBrowser: true, // Enable this option for browser-like environments
+      apiKey: process.env.OPENAI_API_KEY,
     })
-    const data = req
 
-    const completion = await openai.chat.completions.create({
+    const prompt = `Generate ${count} flashcards about ${topic}. Each flashcard should have a 'front' with a question and a 'back' with the answer. Return the result as a JSON array.`
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: data },
+        { role: "system", content: "You are a helpful assistant that generates educational flashcards." },
+        { role: "user", content: prompt },
       ],
-      model: "meta-llama/llama-3.1-8b-instruct:free",
-      response_format: { type: "json_object" },
+      temperature: 0.7,
     })
 
-    console.log("completion", completion)
+    // Parse the response content as JSON
+    const content = response.choices[0].message.content
+    const flashcards = JSON.parse(content)
 
-    return completion.choices[0].message.content
+    return flashcards
   } catch (error) {
-    console.error("Error in LLM API:", error)
-    throw new Error(`Failed to generate content: ${error.message}`)
+    console.error("Error generating flashcards:", error)
+    throw error
   }
 }

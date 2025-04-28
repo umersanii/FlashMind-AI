@@ -1,59 +1,119 @@
-import * as deckModel from "../../models/deck.model" // Import the entire module
-import firebase from "../../utils/firebase" // Assuming this is your firebase mock
+// Mock Firebase but test the actual deck.model.js code
+const mockAddDoc = jest.fn().mockResolvedValue({ id: "mock-doc-id" })
+const mockGetDocs = jest.fn().mockResolvedValue({
+  docs: [
+    {
+      id: "deck-1",
+      data: () => ({ name: "JavaScript", description: "JS basics", userId: "user-123" }),
+    },
+    {
+      id: "deck-2",
+      data: () => ({ name: "React", description: "React fundamentals", userId: "user-123" }),
+    },
+  ],
+})
+const mockUpdateDoc = jest.fn().mockResolvedValue({})
+const mockDeleteDoc = jest.fn().mockResolvedValue({})
+
+jest.mock("firebase/firestore", () => ({
+  collection: jest.fn(() => "collection-ref"),
+  addDoc: mockAddDoc,
+  getDocs: mockGetDocs,
+  query: jest.fn(() => "query-ref"),
+  where: jest.fn(() => "where-ref"),
+  doc: jest.fn(() => "doc-ref"),
+  updateDoc: mockUpdateDoc,
+  deleteDoc: mockDeleteDoc,
+}))
 
 jest.mock("../../utils/firebase", () => ({
-  collection: jest.fn().mockReturnThis(),
-  doc: jest.fn().mockReturnThis(),
-  add: jest.fn().mockResolvedValue({ id: "mock-deck-id" }),
-  where: jest.fn().mockReturnThis(),
-  get: jest.fn().mockResolvedValue({
-    docs: [
-      {
-        id: "deck-1",
-        data: () => ({ name: "Test Deck 1", userId: "user-123" }),
-      },
-      {
-        id: "deck-2",
-        data: () => ({ name: "Test Deck 2", userId: "user-123" }),
-      },
-    ],
-  }),
+  db: {},
 }))
+
+// Import the actual module (not mocked)
+const { createDeck, getDecks, updateDeck, deleteDeck } = require("../../models/deck.model")
 
 describe("Deck Model", () => {
   beforeEach(() => {
+    // Clear all mocks before each test
     jest.clearAllMocks()
   })
 
+  // Test case for creating a deck - valid input (ECP)
   test("createDeck should add a new deck to the database", async () => {
     // Arrange
-    const mockDeck = {
-      name: "Test Deck",
+    const deckData = {
+      name: "JavaScript",
+      description: "JS basics",
       userId: "user-123",
-      createdAt: new Date(),
     }
 
     // Act
-    const result = await deckModel.createDeck(mockDeck)
+    const result = await createDeck(deckData)
 
     // Assert
-    expect(firebase.collection).toHaveBeenCalledWith(expect.anything(), "decks")
-    expect(firebase.add).toHaveBeenCalledWith(mockDeck)
-    expect(result).toEqual({ id: "mock-deck-id" })
+    expect(mockAddDoc).toHaveBeenCalled()
+    expect(result).toHaveProperty("id", "mock-doc-id")
   })
 
-  test("getDecks should retrieve all decks for a user", async () => {
+  // Test case for retrieving decks - valid input (ECP)
+  test("getDecks should retrieve decks for a specific user", async () => {
     // Arrange
-    const mockUserId = "user-123"
+    const userId = "user-123"
 
     // Act
-    const result = await deckModel.getDecks(mockUserId)
+    const decks = await getDecks(userId)
 
     // Assert
-    expect(firebase.collection).toHaveBeenCalledWith(expect.anything(), "decks")
-    expect(firebase.where).toHaveBeenCalledWith("userId", "==", mockUserId)
-    expect(result).toHaveLength(2)
-    expect(result[0]).toHaveProperty("id", "deck-1")
-    expect(result[1]).toHaveProperty("id", "deck-2")
+    expect(mockGetDocs).toHaveBeenCalled()
+    expect(Array.isArray(decks)).toBe(true)
+    expect(decks.length).toBe(2)
+    expect(decks[0]).toHaveProperty("id", "deck-1")
+  })
+
+  // Test case for updating a deck - valid input (ECP)
+  test("updateDeck should update an existing deck", async () => {
+    // Arrange
+    const deckId = "deck-1"
+    const updatedData = {
+      name: "Updated JavaScript",
+      description: "Updated JS basics",
+    }
+
+    // Act
+    const result = await updateDeck(deckId, updatedData)
+
+    // Assert
+    expect(mockUpdateDoc).toHaveBeenCalled()
+    expect(result).toHaveProperty("success", true)
+  })
+
+  // Test case for deleting a deck - valid input (ECP)
+  test("deleteDeck should remove a deck from the database", async () => {
+    // Arrange
+    const deckId = "deck-1"
+
+    // Act
+    const result = await deleteDeck(deckId)
+
+    // Assert
+    expect(mockDeleteDoc).toHaveBeenCalled()
+    expect(result).toHaveProperty("success", true)
+  })
+
+  // Test case for error handling in createDeck
+  test("createDeck should handle errors", async () => {
+    // Arrange
+    const deckData = {
+      name: "JavaScript",
+      description: "JS basics",
+      userId: "user-123",
+    }
+
+    // Mock addDoc to throw an error for this test
+    mockAddDoc.mockRejectedValueOnce(new Error("Database error"))
+
+    // Act & Assert
+    await expect(createDeck(deckData)).rejects.toThrow()
   })
 })
